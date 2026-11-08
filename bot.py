@@ -59,8 +59,8 @@ def get_image(prompt, demo, index):
         d.ellipse((645,690,780,820),fill=(5,11,20))
         d.text((25,30),"OFFLINE DEMO — NOT AI ART",fill="white")
         return im
-    account=os.environ.get("CF_ACCOUNT_ID")
-    token=os.environ.get("CF_API_TOKEN")
+    account=os.environ.get("CF_ACCOUNT_ID","").strip()
+    token=os.environ.get("CF_API_TOKEN","").strip()
     if not account or not token:
         raise RuntimeError("Cloudflare secrets missing: CF_ACCOUNT_ID / CF_API_TOKEN")
     url=f"https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{MODEL}"
