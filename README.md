@@ -24,3 +24,7 @@ GitHub Actions includes a one-off, secret-safe Workers AI connectivity test that
 ## Creative policy — 2026-11-08
 
 The client explicitly requested **no typography in the video** and **no fictional branding or badges on cars**. The generation prompts forbid any emblems. This is a request to the model, not a proven guarantee; inspect each generated image before enabling automatic publishing. Audio generation remains unchanged; movement is optional (only a subtle transition between photos in this version). The TikTok AI-label, if required, must be applied in platform metadata rather than burned into the video.
+
+## Buffer verification
+
+A read-only Buffer API connection check can verify the configured TikTok account without making any posts. Secrets remain in GitHub Actions and are not printed.
