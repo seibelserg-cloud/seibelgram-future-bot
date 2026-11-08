@@ -38,7 +38,7 @@ class BotTests(unittest.TestCase):
         self.assertEqual(im.size,(1024,1024))
     def test_reject_demo_for_publishing(self):
         with self.assertRaisesRegex(RuntimeError,"offline demo"):
-            publish.send("fake",{"demo":True},"https://example.test/test.mp4",[("tiktok","id")])
+            publish.make_post_payload({"demo":True},"https://example.test/test.mp4","id","tiktok")
     def test_tiktok_channel_guard(self):
         other = {"id": "bad", "name": "othercreator", "service": "tiktok",
                  "externalLink": "https://www.tiktok.com/@othercreator",
