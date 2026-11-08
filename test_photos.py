@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 from PIL import Image
 import photo_bot
+import photo_draft
 
 class PhotoTests(unittest.TestCase):
     def test_two_distinct_concepts(self):
@@ -29,6 +30,15 @@ class PhotoTests(unittest.TestCase):
             with Image.open(Path(t)/"car-1.jpg") as im:
                 self.assertEqual(im.size,(1024,1024))
                 self.assertTrue(all(abs(a-b) <= 3 for a,b in zip(im.getpixel((512,512)),(36,71,110))))
+    def test_draft_payload_never_schedules_or_publishes(self):
+        urls=["https://raw.githubusercontent.com/seibelserg-cloud/seibelgram-future-bot/main/photo-test/car-1.jpg"]
+        payload=photo_draft.make_draft_payload("channel",urls)
+        self.assertIs(payload["saveToDraft"],True)
+        self.assertEqual(payload["mode"],"addToQueue")
+        self.assertEqual(len(payload["assets"]),1)
+        self.assertIn("AI-generated",payload["text"])
+        with self.assertRaisesRegex(RuntimeError,"Unapproved photo URL"):
+            photo_draft.make_draft_payload("channel",["https://other.example.com/photo.jpg"])
     def test_post_text_not_burned_into_photos(self):
         import inspect
         s=inspect.getsource(photo_bot.run)
