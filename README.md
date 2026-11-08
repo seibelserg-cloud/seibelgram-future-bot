@@ -2,7 +2,7 @@
 
 Free-first AI concept channel bot for **@seibelgram** — isolated from APP24K/FLOW24K.
 
-**Current state (2026-11-08):** Code uploaded. GitHub Actions CI passed. Cloudflare Workers AI token verified; two real images and one MP4 already generated successfully. Buffer still not connected. **No live posting is enabled.**
+**Current state (2026-11-08):** Code uploaded. GitHub Actions CI passed. Cloudflare Workers AI token verified; two real images and one MP4 already generated successfully. Buffer API authenticated and the TikTok channel @seibelgram verified in read-only mode (2026-11-08). **No live posting is enabled; public MP4 delivery and logo-quality review are still pending.**
 
 - Generate two futuristic car concepts (A/B format, differentiated in the post description only).
 - Render clean vertical 720×1280 MP4 with the original synthetic soundtrack using FFmpeg: **no titles, overlaid text, captions, logos, labels or watermark**.
@@ -27,4 +27,4 @@ The client explicitly requested **no typography in the video** and **no fictiona
 
 ## Buffer verification
 
-A read-only Buffer API connection check can verify the configured TikTok account without making any posts. Secrets remain in GitHub Actions and are not printed.
+**Verified on 2026-11-08:** Buffer API key works; the TikTok channel is @seibelgram. The read-only GitHub Actions check passed and created no posts. Secrets remain in GitHub Actions and are not printed. The posting pipeline stays locked pending public MP4 hosting and approval of emblem-free images.
