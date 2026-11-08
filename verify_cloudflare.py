@@ -27,6 +27,33 @@ def main():
         print("CONFIG ERROR: CF_API_TOKEN should be the raw token, without 'Bearer' or newlines.")
         return 2
 
+    # Verify token status separately to distinguish invalid keys from AI permissions.
+    verify_statuses = []
+    token_active = False
+    for verify_url in (
+        "https://api.cloudflare.com/client/v4/user/tokens/verify",
+        f"https://api.cloudflare.com/client/v4/accounts/{account}/tokens/verify"
+    ):
+        try:
+            res = requests.get(verify_url,
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=20)
+            verify_statuses.append(res.status_code)
+            if res.status_code == 200:
+                data = res.json()
+                status = (data.get("result") or {}).get("status")
+                if data.get("success") is True and status == "active":
+                    token_active = True
+                    break
+        except (requests.RequestException, ValueError):
+            verify_statuses.append("network-or-response-error")
+    if token_active:
+        print("TOKEN STATUS: Active Cloudflare API token confirmed (identifier hidden).")
+    else:
+        print("TOKEN STATUS: Could not verify token as active. Verification HTTP statuses:",verify_statuses)
+        print("This usually indicates a wrong/expired token, a copied token ID rather than the secret, or account mismatch.")
+        return 4
+
     url = f"https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{MODEL}"
     print("TEST: Requesting one FLUX.1 Schnell image. No TikTok/Instagram publishing.")
     try:
