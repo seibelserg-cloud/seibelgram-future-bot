@@ -11,7 +11,7 @@ import random
 import subprocess
 import wave
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFilter, ImageOps
 import requests
 
 ROOT=Path(__file__).resolve().parent
@@ -40,7 +40,10 @@ def concept(day, slot):
                 f"{subject}, {color} paint. Located in {place}. Full car visible from a low front 3/4 angle, "
                 "four believable rubber tires, crisp natural cinematic studio lighting, coherent headlights, "
                 "realistic reflections, daring futuristic industrial design, premium magazine composition. "
-                "No existing brand logos, no letters, no watermark, no people, no collage, no distorted anatomy.")
+                "The entire hood, front grille, nose, bumper, wheel hubs and body panels are completely unbranded and blank. "
+                "Absolutely NO brand badge, NO invented emblem, NO crest, NO manufacturer symbol, NO hood ornament, "
+                "NO lettering, NO signage, NO text, NO license plate, NO watermark, NO identifiable brand marks anywhere. "
+                "Original experimental design, not a copy of an existing car. No people, no collage, no distorted wheels.")
     return dict(title=f"FUTURE CARS {year}: A vs B",date=day,slot=slot,
                 prompts=[prompt(sa,ca),prompt(sb,cb)],
                 labels=[na,nb],
@@ -57,7 +60,6 @@ def get_image(prompt, demo, index):
         d.polygon([(100,660),(300,430),(700,425),(905,670)],fill=(165,190,205))
         d.ellipse((220,690,355,820),fill=(5,11,20))
         d.ellipse((645,690,780,820),fill=(5,11,20))
-        d.text((25,30),"OFFLINE DEMO — NOT AI ART",fill="white")
         return im
     account=os.environ.get("CF_ACCOUNT_ID","").strip()
     token=os.environ.get("CF_API_TOKEN","").strip()
@@ -75,27 +77,18 @@ def get_image(prompt, demo, index):
     if min(image.size)<256: raise RuntimeError("Generated image unexpectedly small")
     return image
 
-def get_font(size,bold=False):
-    files=["/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else
-           "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]
-    for f in files:
-        if Path(f).exists(): return ImageFont.truetype(f,size)
-    return ImageFont.load_default()
+def slide(image, label, index, demo):
+    """Clean cinema frame: only the generated art, no words, badges or overlays.
 
-def slide(image,label,index,demo):
-    im=ImageOps.fit(image,(720,1280)).filter(ImageFilter.GaussianBlur(30)).convert("RGBA")
-    im=Image.alpha_composite(im,Image.new("RGBA",(720,1280),(3,8,16,135)))
-    art=ImageOps.contain(image,(690,790)).convert("RGBA")
-    im.alpha_composite(art,((720-art.width)//2,210+(790-art.height)//2))
-    d=ImageDraw.Draw(im)
-    d.rounded_rectangle((18,28,702,135),radius=16,fill=(5,9,18,220))
-    d.text((40,47),"SEIBELGRAM  /  FUTURE CARS",font=get_font(28,True),fill="white")
-    d.text((40,98),"ORIGINAL AI CONCEPT ART",font=get_font(17),fill="#92bbd7")
-    d.rounded_rectangle((18,1080,702,1250),radius=20,fill=(5,9,18,215))
-    d.text((42,1100),f"CONCEPT {'A' if index==0 else 'B'}",font=get_font(53,True),fill="white")
-    d.text((42,1180),("DEMO ONLY — NOT PUBLISHED" if demo else "AI GENERATED • COMMENT A OR B"),
-           font=get_font(21),fill="#b8cedb")
-    return im.convert("RGB")
+    The entire square image remains visible, without cropping the car.
+    Blurred edge-fill is used only above and below the sharp original.
+    """
+    canvas = ImageOps.fit(image, (720, 1280), method=Image.Resampling.LANCZOS)
+    canvas = canvas.filter(ImageFilter.GaussianBlur(45)).convert("RGB")
+    art = ImageOps.contain(image, (720, 1100), method=Image.Resampling.LANCZOS).convert("RGB")
+    canvas.paste(art, ((720 - art.width) // 2, (1280 - art.height) // 2))
+    return canvas
+
 
 def original_audio(path,seconds=17):
     from array import array
