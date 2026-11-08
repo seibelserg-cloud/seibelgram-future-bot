@@ -2,7 +2,7 @@
 
 Free-first AI concept channel bot for **@seibelgram** — isolated from APP24K/FLOW24K.
 
-**Current state (2026-11-08):** Code uploaded. GitHub Actions CI passed. Cloudflare Workers AI token verified; two real images and one MP4 already generated successfully. Buffer API authenticated and the TikTok channel @seibelgram verified in read-only mode (2026-11-08). **No live posting is enabled; public MP4 delivery and logo-quality review are still pending.**
+**Current state (2026-11-08):** Code uploaded. GitHub Actions CI passed. Cloudflare Workers AI token verified; two real images and one MP4 already generated successfully. Buffer API authenticated and the TikTok channel @seibelgram verified in read-only mode (2026-11-08). **One public photo test succeeded on 2026-11-08. Continuous automatic publishing remains disabled pending content QA and ongoing Buffer incident.**
 
 - Generate two futuristic car concepts (A/B format, differentiated in the post description only).
 - Render clean vertical 720×1280 MP4 with the original synthetic soundtrack using FFmpeg: **no titles, overlaid text, captions, logos, labels or watermark**.
@@ -28,3 +28,7 @@ The client explicitly requested **no typography in the video** and **no fictiona
 ## Buffer verification
 
 **Verified on 2026-11-08:** Buffer API key works; the TikTok channel is @seibelgram. The read-only GitHub Actions check passed and created no posts. Secrets remain in GitHub Actions and are not printed. The posting pipeline stays locked pending public MP4 hosting and approval of emblem-free images.
+
+## First verified public TikTok photo — 2026-11-08
+
+The one-shot workflow published exactly one approved silver concept image as a vertical **1080×1920** photo through Buffer. GitHub Actions returned `sending`, then public TikTok was independently checked: [the post is live](https://www.tiktok.com/@seibelgram/photo/7705791143073598753), with the exact expected caption `A car from tomorrow. Would you drive it? ⚡ Fictional AI-generated concept. #FutureCars #ConceptCars #Seibelgram`. No automatic retry was attempted. The one-shot lock is saved in the repository; rerunning must never create a duplicate. This confirms a single successful live test **but does not authorize unattended repeat publishing**. Buffer's TikTok photo-post incident remains active at the time of testing.
