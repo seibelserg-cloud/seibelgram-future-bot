@@ -1,0 +1,63 @@
+name: SEIBELGRAM — safe generator
+
+on:
+  workflow_dispatch:
+    inputs:
+      demo:
+        description: 'Offline test (no API requests, no publication)'
+        type: boolean
+        required: true
+        default: true
+  schedule:
+    - cron: '7 11 * * *'
+    - cron: '7 18 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seibelgram-generator
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    # Scheduled execution is OFF until explicitly enabled in repository Variables.
+    if: github.event_name == 'workflow_dispatch' || vars.ENABLE_AI_GENERATION == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install requirements
+        run: |
+          python -m pip install -r requirements.txt
+          if ! command -v ffmpeg >/dev/null; then sudo apt-get update && sudo apt-get install -y ffmpeg; fi
+      - name: Run safety tests
+        run: python -m unittest -v test_bot
+      - name: Generate vertical MP4 preview
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          MANUAL_DEMO: ${{ inputs.demo }}
+          CRON_EXPRESSION: ${{ github.event.schedule }}
+        run: |
+          set -eu
+          SLOT=1
+          if [ "$CRON_EXPRESSION" = '7 18 * * *' ]; then SLOT=2; fi
+          if [ "$MANUAL_DEMO" = "true" ]; then
+            python bot.py --demo --slot "$SLOT"
+          else
+            python bot.py --slot "$SLOT"
+          fi
+      - name: Save MP4 and caption for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: seibelgram-preview
+          path: site/
+          retention-days: 7
+
+# No workflow step publishes to TikTok or Instagram.
+# Automatic publication will be added only after a real API and content test.
