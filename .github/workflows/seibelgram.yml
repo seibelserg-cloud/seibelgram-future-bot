@@ -1,6 +1,8 @@
 name: SEIBELGRAM — safe generator
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       demo:
@@ -22,7 +24,7 @@ concurrency:
 jobs:
   preview:
     # Scheduled execution is OFF until explicitly enabled in repository Variables.
-    if: github.event_name == 'workflow_dispatch' || vars.ENABLE_AI_GENERATION == 'true'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || vars.ENABLE_AI_GENERATION == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,7 +43,7 @@ jobs:
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          MANUAL_DEMO: ${{ inputs.demo }}
+          MANUAL_DEMO: ${{ github.event_name == 'push' && 'true' || inputs.demo }}
           CRON_EXPRESSION: ${{ github.event.schedule }}
         run: |
           set -eu
