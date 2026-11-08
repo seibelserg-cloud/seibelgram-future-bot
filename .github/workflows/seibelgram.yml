@@ -63,3 +63,29 @@ jobs:
 
 # No workflow step publishes to TikTok or Instagram.
 # Automatic publication will be added only after a real API and content test.
+
+  cloudflare_connectivity:
+    # One-time explicit verification only; no publishing or ongoing spending.
+    if: github.event_name == 'push' && github.event.head_commit.message == 'Verify Cloudflare secrets and connection'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Verify Cloudflare account and generate one test image
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: python verify_cloudflare.py
+      - name: Save test image without exposing API token
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudflare-smoke-image
+          path: cloudflare-test-image.jpg
+          retention-days: 7
