@@ -40,9 +40,33 @@ class BotTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,"offline demo"):
             publish.send("fake",{"demo":True},"https://example.test/test.mp4",[("tiktok","id")])
     def test_tiktok_channel_guard(self):
-        mock=[{"id":"bad","name":"othercreator","service":"tiktok","isDisconnected":False,"isLocked":False}]
-        with patch.object(publish,"channels",return_value=mock), patch.dict("os.environ",{"BUFFER_CHANNEL_TIKTOK":"bad"},clear=True):
-            with self.assertRaisesRegex(RuntimeError,"Unexpected TikTok"):
-                publish.selected("fake")
+        other = {"id": "bad", "name": "othercreator", "service": "tiktok",
+                 "externalLink": "https://www.tiktok.com/@othercreator",
+                 "isDisconnected": False, "isLocked": False}
+        ours = {"id": "ours", "name": "Seibelgram", "service": "tiktok",
+                "externalLink": "https://www.tiktok.com/@seibelgram",
+                "isDisconnected": False, "isLocked": False}
+        self.assertFalse(publish.is_target_tiktok(other))
+        self.assertTrue(publish.is_target_tiktok(ours))
+        with patch.object(publish, "channels", return_value=[other]):
+            with self.assertRaisesRegex(RuntimeError, "exactly one TikTok"):
+                publish.verify("fake")
+
+    def test_buffer_verification_is_read_only(self):
+        ours = {"id": "ours", "name": "Seibelgram", "service": "tiktok",
+                "externalLink": "https://www.tiktok.com/@seibelgram",
+                "isDisconnected": False, "isLocked": False}
+        with patch.object(publish, "channels", return_value=[ours]):
+            self.assertEqual(publish.verify("fake"), "ours")
+
+    def test_buffer_post_is_explicit_and_no_demo(self):
+        metadata = {"demo": False, "title": "FUTURE CARS 2051",
+                    "labels": ["HYPERCAR", "FUTURE WAGON"]}
+        post = publish.make_post_payload(metadata, "https://example.org/car.mp4", "ours", "tiktok")
+        self.assertEqual(post["metadata"]["tiktok"]["isAiGenerated"], True)
+        self.assertLessEqual(len(post["text"]), 150)
+        self.assertEqual(post["mode"], "addToQueue")
+        with self.assertRaisesRegex(RuntimeError, "offline demo"):
+            publish.make_post_payload({"demo": True}, "https://example.org/car.mp4", "ours", "tiktok")
 
 if __name__=="__main__":unittest.main()
