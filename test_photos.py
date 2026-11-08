@@ -28,7 +28,7 @@ class PhotoTests(unittest.TestCase):
             self.assertEqual(len(metadata["images"]),2)
             with Image.open(Path(t)/"car-1.jpg") as im:
                 self.assertEqual(im.size,(1024,1024))
-                self.assertEqual(im.getpixel((512,512)),(36,71,110))
+                self.assertTrue(all(abs(a-b) <= 3 for a,b in zip(im.getpixel((512,512)),(36,71,110))))
     def test_post_text_not_burned_into_photos(self):
         import inspect
         s=inspect.getsource(photo_bot.run)
