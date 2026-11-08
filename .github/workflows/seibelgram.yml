@@ -241,3 +241,46 @@ jobs:
           name: seibelgram-buffer-photo-draft
           path: photo-draft-result.json
           retention-days: 7
+
+  first_live_photo_test:
+    # Explicit, single public test: never scheduled or repeated; no bulk posting.
+    if: github.event_name == 'push' && github.event.head_commit.message == 'Publish one SEIBELGRAM photo test'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Prepare portrait with same silver car and create one-shot lock
+        run: python one_shot_photo.py prepare
+      - name: Persist published media and attempt lock BEFORE posting
+        run: |
+          set -eu
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add content/first-live-test-2026-11-08
+          git commit -m "Reserve first live photo test; never retry"
+          git push
+      - name: Publish exactly one photo to @seibelgram through Buffer
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          SEIBELGRAM_ONE_SHOT_LIVE_TEST: "yes"
+        run: python one_shot_photo.py publish
+      - name: Store result for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seibelgram-first-live-photo-test-result
+          path: |
+            seibelgram-first-test-result.json
+            content/first-live-test-2026-11-08/photo.jpg
+          retention-days: 7
