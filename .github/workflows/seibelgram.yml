@@ -284,3 +284,32 @@ jobs:
             seibelgram-first-test-result.json
             content/first-live-test-2026-11-08/photo.jpg
           retention-days: 7
+
+  daily_healthcheck:
+    # Server-side maintenance only. The real posting workflow is still locked.
+    if: github.event_name == 'schedule' && github.event.schedule == '7 11 * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run all local safety checks
+        run: |
+          python -m unittest -v test_bot
+          python -m unittest -v test_photos
+      - name: Verify Buffer still connected to @seibelgram (read only)
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: python publish.py --verify
+      - name: Explain safety state
+        run: |
+          echo "SEIBELGRAM healthcheck completed. NO post created."
+          echo "Unattended publishing remains disabled pending Buffer incident closure, deduplication and visual QA."
