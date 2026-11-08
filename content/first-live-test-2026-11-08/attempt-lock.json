@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-08",
+  "type": "one-shot",
+  "target": "tiktok/@seibelgram",
+  "status": "attempt authorized; do not repeat even if Buffer reports error",
+  "source": "content/test-2026-11-08/car-1.jpg",
+  "image": "content/first-live-test-2026-11-08/photo.jpg",
+  "attempts_allowed": 1,
+  "automatic_retries": false
+}
