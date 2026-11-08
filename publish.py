@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Buffer GraphQL publishing, disabled unless explicitly enabled in GitHub workflow."""
+"""Buffer GraphQL integration. Safe by default: discovery only, no publishing."""
 import argparse
 import json
 import os
 from pathlib import Path
-import time
+from urllib.parse import urlparse
 import requests
 
-API="https://api.buffer.com"
-MUTATION="""mutation CreateSeibelgram($input: CreatePostInput!) {
+API = "https://api.buffer.com"
+TARGET_TIKTOK = "seibelgram"
+
+MUTATION = """mutation CreateSeibelgram($input: CreatePostInput!) {
   createPost(input: $input) {
     ... on PostActionSuccess { post { id status } }
     ... on MutationError { message }
@@ -16,81 +18,118 @@ MUTATION="""mutation CreateSeibelgram($input: CreatePostInput!) {
 }"""
 
 def gql(token, query, variables=None):
-    r=requests.post(API,json={"query":query,"variables":variables or {}},
-      headers={"Authorization":f"Bearer {token}","Content-Type":"application/json"},timeout=40)
-    r.raise_for_status()
-    obj=r.json()
-    if obj.get("errors"): raise RuntimeError(f"Buffer GraphQL rejected request: {obj['errors']}")
-    return obj["data"]
+    response = requests.post(API, json={"query": query, "variables": variables or {}},
+        headers={"Authorization": f"Bearer {token.strip()}", "Content-Type": "application/json"},
+        timeout=45)
+    response.raise_for_status()
+    data = response.json()
+    if data.get("errors"):
+        # Avoid echoing any accidental sensitive data in upstream errors.
+        raise RuntimeError("Buffer GraphQL query rejected. Check the schema and key permissions.")
+    if "data" not in data:
+        raise RuntimeError("Buffer GraphQL returned no data.")
+    return data["data"]
 
 def channels(token):
-    orgs=gql(token,"query { account { organizations { id name } } }")["account"]["organizations"]
-    out=[]
-    for org in orgs:
-        q="query($id: String!) { channels(input: { organizationId: $id }) { id name service isDisconnected isLocked } }"
-        for ch in gql(token,q,{"id":org["id"]})["channels"]:
-            out.append(ch)
-    return out
+    organizations = gql(token, "query { account { organizations { id name } } }")["account"]["organizations"]
+    result = []
+    for org in organizations:
+        query = """query GetChannels($id: String!) {
+          channels(input: { organizationId: $id }) {
+            id name displayName externalLink service isDisconnected isLocked
+          }
+        }"""
+        result.extend(gql(token, query, {"id": org["id"]})["channels"])
+    return result
 
-def selected(token):
-    allowed={"tiktok":os.getenv("BUFFER_CHANNEL_TIKTOK",""),
-             "instagram":os.getenv("BUFFER_CHANNEL_INSTAGRAM","")}
-    available={c["id"]:c for c in channels(token)}
-    out=[]
-    for service,channel_id in allowed.items():
-        if not channel_id:continue
-        c=available.get(channel_id)
-        if not c or str(c["service"]).lower()!=service or c["isDisconnected"] or c["isLocked"]:
-            raise RuntimeError(f"Buffer {service} channel not connected or mismatched")
-        name=c["name"].lower().strip().lstrip("@")
-        if service=="tiktok" and name!="seibelgram":
-            raise RuntimeError(f"Unexpected TikTok destination: {c['name']}")
-        print("Verified:",service,c["name"],c["id"])
-        out.append((service,channel_id))
-    if not out:raise RuntimeError("No Buffer destination configured")
-    return out
+def is_target_tiktok(channel):
+    if str(channel.get("service","")).lower() != "tiktok":
+        return False
+    external = (channel.get("externalLink") or "").strip()
+    if external:
+        path = urlparse(external if "://" in external else "https://" + external).path.lower().rstrip("/")
+        if path == "/@" + TARGET_TIKTOK:
+            return True
+        # If the provider supplies a different path, never silently pick that account.
+        return False
+    return channel.get("name", "").strip().lower().lstrip("@") == TARGET_TIKTOK
 
-def ensure_public(url):
-    if not url.startswith("https://"):raise ValueError("Public HTTPS media URL required")
-    for _ in range(8):
-        try:
-            r=requests.head(url,allow_redirects=True,timeout=20)
-            if r.status_code==200 and r.headers.get("Content-Type","").lower().startswith("video/"):
-                return
-        except requests.RequestException:pass
-        time.sleep(15)
-    raise RuntimeError("MP4 not publicly accessible yet")
+def connected_tiktok(token):
+    matches = [ch for ch in channels(token) if is_target_tiktok(ch)]
+    if len(matches) != 1:
+        raise RuntimeError(f"Expected exactly one TikTok @{TARGET_TIKTOK}; matched {len(matches)}")
+    ch = matches[0]
+    if ch.get("isDisconnected") or ch.get("isLocked"):
+        raise RuntimeError("TikTok channel is disconnected or locked in Buffer.")
+    return ch
 
-def send(token, meta, media_url, targets):
-    if meta.get("demo"):raise RuntimeError("Refusing to publish offline demo")
-    for service,id_ in targets:
-        payload={"text":meta["caption"],"channelId":id_,
-          "schedulingType":"automatic","mode":"shareNow","aiAssisted":True,
-          "assets":[{"video":{"url":media_url,"metadata":{"thumbnailOffset":1500}}}]}
-        if service=="tiktok":
-            payload["metadata"]={"tiktok":{"isAiGenerated":True}}
-        else:
-            payload["metadata"]={"instagram":{"type":"reel","shouldShareToFeed":True,"isAiGenerated":True}}
-        result=gql(token,MUTATION,{"input":payload})["createPost"]
-        if not result or not result.get("post"):
-            raise RuntimeError(f"Buffer did not accept {service}: {result}")
-        print("Submitted to Buffer:",service,result["post"])
+def verify(token):
+    ch = connected_tiktok(token)
+    print("SUCCESS: Buffer API authentication and connected TikTok verified.")
+    print("Target channel:", ch.get("name"), "service:", ch["service"])
+    print("No video was uploaded or published.")
+    return ch["id"]
+
+def caption_for_platform(meta, platform):
+    # TikTok: Buffer's composer documents a 150-character description limit.
+    title = meta.get("title", "Future car concepts")
+    labels = meta.get("labels") or ["A", "B"]
+    if platform == "tiktok":
+        text = f"{title}. Which design wins: {labels[0]} or {labels[1]}? Comment A or B. #FutureCars #AIConcept"
+        return text[:150]
+    return meta.get("caption","")[:2000]
+
+def make_post_payload(meta, media_url, channel_id, platform, mode="addToQueue"):
+    if meta.get("demo") is not False:
+        raise RuntimeError("Refusing to publish an offline demo or unverified post.")
+    if not media_url.startswith("https://"):
+        raise RuntimeError("A public HTTPS video URL is required.")
+    payload = {
+        "text": caption_for_platform(meta, platform),
+        "channelId": channel_id,
+        "schedulingType": "automatic",
+        "mode": mode,
+        "aiAssisted": True,
+        "assets": [{"video": {"url": media_url, "metadata": {"thumbnailOffset": 1500}}}]
+    }
+    if platform == "tiktok":
+        payload["metadata"] = {"tiktok": {"isAiGenerated": True}}
+    elif platform == "instagram":
+        payload["metadata"] = {"instagram": {
+            "type": "reel", "shouldShareToFeed": True, "isAiGenerated": True}}
+    return payload
+
+def ensure_public_video(url):
+    if not url.startswith("https://"):
+        raise ValueError("Expected a public HTTPS URL.")
+    response = requests.head(url, allow_redirects=True, timeout=20)
+    response.raise_for_status()
+    if not response.headers.get("Content-Type", "").lower().startswith("video/"):
+        raise RuntimeError("URL did not return a video content-type")
 
 def main():
-    p=argparse.ArgumentParser()
-    p.add_argument("--discover",action="store_true")
-    p.add_argument("--check-only",action="store_true")
-    p.add_argument("--media-url",default="")
-    a=p.parse_args()
-    token=os.environ.get("BUFFER_API_KEY")
-    if not token:raise RuntimeError("BUFFER_API_KEY GitHub secret required")
-    if a.discover:
-        for c in channels(token):print(c["service"],c["name"],c["id"])
-        return
-    targets=selected(token)
-    if a.check_only:return
-    meta=json.loads(Path("site/post.json").read_text(encoding="utf-8"))
-    ensure_public(a.media_url)
-    send(token,meta,a.media_url,targets)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--verify", action="store_true", help="Only verify Buffer API and TikTok connection")
+    parser.add_argument("--publish", action="store_true", help="Explicit permission to create Buffer post")
+    parser.add_argument("--media-url", default="")
+    parser.add_argument("--metadata", default="site/post.json")
+    args = parser.parse_args()
 
-if __name__=="__main__":main()
+    token = os.environ.get("BUFFER_API_KEY", "").strip()
+    if not token:
+        raise RuntimeError("GitHub secret BUFFER_API_KEY is missing.")
+    channel_id = verify(token)
+    if not args.publish:
+        return
+    if not os.environ.get("SEIBELGRAM_ENABLE_POSTING") == "yes":
+        raise RuntimeError("Publishing safety lock enabled. Explicit manual consent needed.")
+    metadata = json.loads(Path(args.metadata).read_text(encoding="utf-8"))
+    ensure_public_video(args.media_url)
+    payload = make_post_payload(metadata, args.media_url, channel_id, "tiktok")
+    result = gql(token, MUTATION, {"input": payload}).get("createPost")
+    if not result or not result.get("post"):
+        raise RuntimeError("Buffer did not accept the post; no confirmed publish.")
+    print("Buffer post created:", result["post"]["id"])
+
+if __name__ == "__main__":
+    main()
