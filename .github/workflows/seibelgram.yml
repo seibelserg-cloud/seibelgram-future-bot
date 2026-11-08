@@ -10,6 +10,11 @@ on:
         type: boolean
         required: true
         default: true
+      check_cloudflare:
+        description: 'Check Cloudflare token and generate one test image; never publishes'
+        type: boolean
+        required: true
+        default: false
   schedule:
     - cron: '7 11 * * *'
     - cron: '7 18 * * *'
@@ -66,7 +71,7 @@ jobs:
 
   cloudflare_connectivity:
     # One-time explicit verification only; no publishing or ongoing spending.
-    if: github.event_name == 'push' && github.event.head_commit.message == 'Verify Cloudflare secrets and connection'
+    if: (github.event_name == 'push' && github.event.head_commit.message == 'Verify Cloudflare secrets and connection') || (github.event_name == 'workflow_dispatch' && inputs.check_cloudflare == true)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
