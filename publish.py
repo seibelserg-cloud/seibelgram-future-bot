@@ -34,7 +34,7 @@ def channels(token):
     organizations = gql(token, "query { account { organizations { id name } } }")["account"]["organizations"]
     result = []
     for org in organizations:
-        query = """query GetChannels($id: String!) {
+        query = """query GetChannels($id: OrganizationId!) {
           channels(input: { organizationId: $id }) {
             id name displayName externalLink service isDisconnected isLocked
           }
