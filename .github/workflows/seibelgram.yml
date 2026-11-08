@@ -10,6 +10,11 @@ on:
         type: boolean
         required: true
         default: true
+      photos:
+        description: 'Generate two photo previews for review, without social publishing'
+        type: boolean
+        required: true
+        default: false
       check_buffer:
         description: 'Verify Buffer token and @seibelgram connection; no publishing'
         type: boolean
@@ -149,3 +154,34 @@ jobs:
         env:
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
         run: python publish.py --verify
+
+  photo_preview:
+    # Generates still images only; no TikTok or Buffer API request is made.
+    if: (github.event_name == 'workflow_dispatch' && inputs.photos == true) || (github.event_name == 'push' && github.event.head_commit.message == 'Generate SEIBELGRAM photo preview')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: python -m pip install -r requirements.txt
+      - name: Run photo and safety tests
+        run: |
+          python -m unittest -v test_bot
+          python -m unittest -v test_photos
+      - name: Generate two AI photos, without any text overlays
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: python photo_bot.py
+      - name: Archive photos and captions for review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seibelgram-photo-preview
+          path: photo_output/
+          retention-days: 7
