@@ -2,11 +2,11 @@
 
 Free-first AI concept channel bot for **@seibelgram** — isolated from APP24K/FLOW24K.
 
-**Current state (2026-11-08):** Code uploaded. GitHub Actions offline preview CI passed. Cloudflare and Buffer account connections still required. **No live posting is enabled.**
+**Current state (2026-11-08):** Code uploaded. GitHub Actions CI passed. Cloudflare Workers AI token verified; two real images and one MP4 already generated successfully. Buffer still not connected. **No live posting is enabled.**
 
-- Generate two different futuristic car concepts (A/B format).
-- Render vertical 720×1280 MP4 with original synthetic soundtrack using FFmpeg.
-- Produce English captions and AI disclosure metadata.
+- Generate two futuristic car concepts (A/B format, differentiated in the post description only).
+- Render clean vertical 720×1280 MP4 with the original synthetic soundtrack using FFmpeg: **no titles, overlaid text, captions, logos, labels or watermark**.
+- Produce English *post-description* copy and AI disclosure metadata, never text burned onto frames.
 - Use Cloudflare Workers AI REST API when two GitHub Secrets are configured.
 - Buffer GraphQL publishing module is present but not called by the current safe workflow.
 - GitHub Actions default: offline demo on push; scheduled real generation disabled until enabled separately.
@@ -20,3 +20,7 @@ See [instructions in Russian](SETUP_RU.md). Open [Actions](https://github.com/se
 ## Cloudflare verification
 
 GitHub Actions includes a one-off, secret-safe Workers AI connectivity test that requests a single image; social publishing stays disabled.
+
+## Creative policy — 2026-11-08
+
+The client explicitly requested **no typography in the video** and **no fictional branding or badges on cars**. The generation prompts forbid any emblems. This is a request to the model, not a proven guarantee; inspect each generated image before enabling automatic publishing. Audio generation remains unchanged; movement is optional (only a subtle transition between photos in this version). The TikTok AI-label, if required, must be applied in platform metadata rather than burned into the video.
