@@ -6,6 +6,8 @@ from tempfile import TemporaryDirectory
 import json
 import bot
 import publish
+import inspect
+from PIL import Image
 
 class BotTests(unittest.TestCase):
     def test_repeatability_and_different_designs(self):
@@ -14,6 +16,19 @@ class BotTests(unittest.TestCase):
         self.assertEqual(a,b)
         self.assertNotEqual(a["labels"][0],a["labels"][1])
         self.assertIn("AI-generated",a["caption"])
+    def test_clean_frame_contains_no_rendered_typography(self):
+        src = inspect.getsource(bot.slide)
+        self.assertNotIn(".text(", src)
+        self.assertNotIn("ImageDraw.Draw(", src)
+        pure_color = (44, 66, 88)
+        frame = bot.slide(Image.new("RGB", (1024,1024), pure_color), "A", 0, False)
+        self.assertEqual(frame.size, (720,1280))
+        self.assertEqual(frame.getpixel((360,640)), pure_color)
+    def test_prompts_prohibit_all_emblems(self):
+        for prompt in bot.concept("2026-11-08",1)["prompts"]:
+            self.assertIn("NO invented emblem",prompt)
+            self.assertIn("NO brand badge",prompt)
+            self.assertIn("NO lettering",prompt)
     def test_cloudflare_requires_secrets(self):
         with patch.dict("os.environ",{},clear=True):
             with self.assertRaisesRegex(RuntimeError,"Cloudflare secrets"):
