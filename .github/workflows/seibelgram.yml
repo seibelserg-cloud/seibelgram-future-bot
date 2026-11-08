@@ -94,3 +94,34 @@ jobs:
           name: cloudflare-smoke-image
           path: cloudflare-test-image.jpg
           retention-days: 7
+
+  real_preview_once:
+    # One explicit first AI video preview. Does not publish and has no daily trigger.
+    if: github.event_name == 'push' && github.event.head_commit.message == 'Generate first real SEIBELGRAM preview'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          command -v ffmpeg
+      - name: Run safety tests
+        run: python -m unittest -v test_bot
+      - name: Create real AI concept video without posting
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: python bot.py --slot 1
+      - name: Store first real video and captions
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seibelgram-real-ai-preview
+          path: site/
+          retention-days: 7
