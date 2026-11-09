@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Generate unbranded, no-overlay, no-text concept car PHOTOS for visual approval.
+"""SEIBELGRAM | FUTURE / IMPOSSIBLE: radical concept-car photo candidates.
 
-No social publishing happens here. GitHub workflow uploads photos as an artifact.
+This module generates images and safe 9:16 previews. IT NEVER POSTS.
+Each candidate is a separate photograph; no collages or typography.
 """
 import argparse
 import datetime as dt
@@ -12,88 +13,129 @@ from PIL import Image, ImageOps, ImageFilter
 from bot import get_image
 
 OUT = Path("photo_output")
+
+# Internal labels are only for metadata/captions; NEVER render labels in artwork.
 THEMES = [
-    ("SILVER PHANTOM", "silver ceramic electric hypercar, extremely low sweeping roof, sculpted continuous aerodynamic silhouette, full-width diffuse glass lighting, original form never seen in production"),
-    ("TOURING ZERO", "long-roof ultra-modern luxury grand touring wagon, elegant floating glass canopy, dramatic wheel arches, sculptural continuous surfaces, athletic proportions"),
-    ("NOVA ROADSTER", "open-top all-electric speedster with smooth flowing bodywork, advanced lightweight cockpit, delicate blade-thin lighting surfaces"),
-    ("ONYX GT", "black titanium two-seat futuristic grand tourer with intense minimalist body lines, sculpted side air channels and a clean seamless hood"),
-    ("ATLAS SEDAN", "radical next-generation executive electric sports sedan, four doors, floating panoramic glazing, wide athletic proportions, sculptural edges"),
-    ("AETHER COUPE", "original futuristic fastback coupe, long uninterrupted hood, tiny futuristic light lines, deep flowing wheel arches")
+    ("MONOLITH",
+     "A radically original 2055 monolithic mobility sculpture. One seamless cast-metal volume like a liquid "
+     "titanium pebble shaped by supersonic wind. A continuous ultra-low black glass cockpit is fused into the "
+     "upper shell; the four enormous wheels emerge from precise circular cutouts in otherwise perfectly calm "
+     "surfaces. No visible bonnet seam, conventional grille, door handles or typical passenger-car architecture. "
+     "The silhouette must be a striking single architectural gesture, not a familiar coupe."),
+    ("AERO BEAST",
+     "An unprecedented 2060 high-speed aerodynamic organism, ultra-low and extremely long, with twin huge "
+     "load-bearing flying buttresses, open-air tunnels passing THROUGH the sculptural central body, an elongated "
+     "fighter-jet glass canopy, an extreme tapered tail, four huge engineered wheels and exceptionally wide track. "
+     "Aggressively beautiful, almost impossible but mechanically plausible. No ordinary supercar nose, generic "
+     "sports-car proportions, conventional radiator grille or pasted-on wings."),
+    ("SPACE LIMO",
+     "A visionary 2058 ultra-luxury ground vessel, with extremely long wheelbase, panoramic teardrop-shaped "
+     "glass passenger capsule, radically sculpted continuous floating outer hull, dramatically extended rear "
+     "deck and four large partly recessed wheels. Futuristic mobile architecture, peaceful yet imposing, "
+     "almost spacecraft-like without flying. No typical four-door sedan body, no SUV cabin, no boxy roof, "
+     "no familiar luxury brand design or conventional trunk.")
 ]
-PALETTES = ["polished satin platinum","gunmetal graphite","pearl white","oxidized bronze","deep electric cobalt","liquid silver"]
+PALETTES = [
+    "brushed liquid platinum with obsidian glazing",
+    "deep petroleum blue iridescent titanium",
+    "warm oxidized bronze with graphite shadow surfaces",
+    "pearl-ceramic white with anthracite glass",
+    "satin dark chromium with subtle copper reflections",
+    "polished meteorite silver with smoked glass"
+]
 LOCATIONS = [
-    "a huge architectural photography studio with warm directional sun and physically accurate soft floor shadows",
-    "an illuminated premium concrete pavilion at dusk with soft atmospheric depth and realistic reflected light",
-    "a silent minimalist design gallery with sophisticated indirect lighting and dramatic physically realistic shadows"
+    "vast minimal polished-concrete museum with sculptural light openings, dusk",
+    "monumental futuristic architecture of curving stone and deep shadow, sunrise",
+    "quiet high-end experimental automotive gallery, charcoal walls and soft luminous floor"
 ]
-VIEWS=[
-    ("front_three_quarter", "low FRONT three-quarter camera angle, front headlights and one full side clearly visible"),
-    ("true_side_profile", "STRICT ORTHOGRAPHIC SIDE PROFILE, camera 90 degrees perpendicular to the vehicle length, showing its complete silhouette"),
-    ("rear_three_quarter", "low REAR three-quarter camera angle, tail lamps and one full side clearly visible"),
-    ("front_head_on", "low centered FRONT head-on camera angle, full car and both front wheels visible"),
+VIEWS = [
+    ("front_three_quarter", "low FRONT three-quarter camera, one complete side and entire nose visible"),
+    ("true_side_profile", "STRICT true SIDE PROFILE, perpendicular 90-degree camera, entire silhouette from nose to tail"),
+    ("rear_three_quarter", "low REAR three-quarter camera, one complete side and full tapered tail visible"),
+    ("front_head_on", "low centered FRONT head-on camera, symmetric nose and both front wheels visible"),
 ]
+
+CORE_STYLE = (
+    "Create a museum-grade radically new transportation sculpture, an unmistakable design leap beyond "
+    "ALL contemporary 2020s/2030s production cars. Unforgettable exterior massing and innovative silhouette "
+    "are FAR more important than headlights, surface graphics or LED stripes. This is NOT an SUV, "
+    "NOT a conventional sports coupe, NOT a facelift, NOT a recognizable brand or current road car. "
+    "Photorealistic premium industrial-design CGI, physically coherent surfaces and wheel placement, "
+    "four believable wheels, sophisticated reflections, rich architectural lighting, entirely visible "
+    "vehicle with space around its edges, ONE vehicle only."
+)
+CLEAN = (
+    "NO manufacturer identity; completely BLANK nose, hood, body and wheel hubs. "
+    "Absolutely no badges, fake emblems, branding, crests, insignia, stickers, letters, numbers, "
+    "license plates, inscriptions, text, title, signs, watermark, people, split screen or collage."
+)
 
 def portrait_frame(image):
-    """Vertical 9:16 with unaltered whole vehicle in the central sharp photo."""
-    canvas=ImageOps.fit(image,(1080,1920),method=Image.Resampling.LANCZOS)
-    canvas=canvas.filter(ImageFilter.GaussianBlur(42)).convert("RGB")
-    art=ImageOps.contain(image,(1080,1680),method=Image.Resampling.LANCZOS).convert("RGB")
-    canvas.paste(art,((1080-art.width)//2,(1920-art.height)//2))
+    """Vertical 9:16; preserve whole original geometry (no fake new camera view)."""
+    canvas = ImageOps.fit(image, (1080, 1920), method=Image.Resampling.LANCZOS)
+    canvas = canvas.filter(ImageFilter.GaussianBlur(42)).convert("RGB")
+    art = ImageOps.contain(image, (1080, 1680), method=Image.Resampling.LANCZOS).convert("RGB")
+    canvas.paste(art, ((1080-art.width)//2, (1920-art.height)//2))
     return canvas
 
-def prompts_for(day,slot):
-    rng=random.Random(f"SEIBELGRAM-photos-v1:{day}:{slot}")
-    choices=rng.sample(THEMES,2)
-    colors=rng.sample(PALETTES,2)
-    locations=rng.sample(LOCATIONS,2)
-    base_view=(int(day.replace("-",""))+slot*2)%len(VIEWS)
-    views=[VIEWS[base_view],VIEWS[(base_view+1)%len(VIEWS)]]
-    prompts=[]
-    for (name,design),color,place,(view_name,view_text) in zip(choices,colors,locations,views):
-        prompts.append(
-            f"Commercial luxury automotive concept photography, visually breathtaking original imagined car: {design}. "
-            f"Finish: {color}; environment: {place}. Camera: {view_text}. Entire vehicle visible and not cropped, "
-            "premium high-end CGI indistinguishable from a professional car photography campaign, complex "
-            "realistic reflections, rich volumetric shadows, purposeful functional automotive details, "
-            "coherent tires and wheels, cinematic photographic lens, no floating car. "
-            "The hood and entire body are BLANK unmarked sculptural surfaces. The car is completely UNBRANDED. "
-            "Smooth empty wheel hubs, no center caps, blank grille area, no badge platform, no crests, no logos "
-            "or symbols, no letters, no numbers, no branding, no license plate, no labels, no text, no watermark. "
-            "A novel imagined object, not copied from a manufacturer. Exactly one vehicle, no collage."
+def prompts_for(day, slot):
+    # Distinct silhouettes each slot, rotating 3 families. Different dates/slots diversify.
+    rng = random.Random(f"SEIBELGRAM-IMPOSSIBLE-01:{day}:{slot}")
+    choices = rng.sample(THEMES, 2)
+    colors = rng.sample(PALETTES, 2)
+    locations = rng.sample(LOCATIONS, 2)
+    base = (int(day.replace("-", "")) + slot*2) % len(VIEWS)
+    views = [VIEWS[base], VIEWS[(base+1) % len(VIEWS)]]
+    prompts = []
+    for (_, design), color, place, (_, view) in zip(choices, colors, locations, views):
+        prompt = (
+            f"{design} Finish: {color}. Location: {place}. Camera: {view}. "
+            f"{CORE_STYLE} {CLEAN}"
         )
-    return choices,prompts
+        # The currently used Flux endpoint in bot.py caps outgoing prompt at 2048 chars.
+        if len(prompt) > 2048:
+            raise ValueError("Future concept prompt exceeds Cloudflare Flux request cap")
+        prompts.append(prompt)
+    return choices, prompts
 
-def run(day,slot,demo=False):
-    themes,prompts=prompts_for(day,slot)
+def run(day, slot, demo=False):
+    themes, prompts = prompts_for(day, slot)
     OUT.mkdir(parents=True, exist_ok=True)
-    manifest={
-        "day":day,"slot":slot,"demo":demo,"images":[],"requires_visual_review":True,
-        "approved_for_publication":False,"ai_generated":True,
-        "title":"Which future car would you drive?",
-        "caption":"Which one would you drive — the first or the second? ⚡🚘\n\n"
-                  "Imaginary AI-generated car concepts. #FutureCars #ConceptCars #CarDesign #Seibelgram",
-        "platform":"tiktok","published":False
+    manifest = {
+        "day": day, "slot": slot, "creative_version": "FUTURE-IMPOSSIBLE-01",
+        "demo": demo, "images": [],
+        "requires_visual_review": True,
+        "approved_for_publication": False,
+        "ai_generated": True,
+        "title": "FUTURE / IMPOSSIBLE — which vision wins?",
+        "caption": "Which impossible car would you actually drive: 1 or 2? "
+                   "⚡ Fictional AI-generated car concept art. "
+                   "#FutureCars #ConceptCars #ImpossibleDesign #Seibelgram",
+        "platform": "tiktok", "published": False
     }
-    for i, ((label,_),prompt) in enumerate(zip(themes,prompts),start=1):
-        im=get_image(prompt,demo,i-1).convert("RGB")
-        if im.width<512 or im.height<512:
+    for i, ((label, _), prompt) in enumerate(zip(themes, prompts), start=1):
+        im = get_image(prompt, demo, i-1).convert("RGB")
+        if im.width < 512 or im.height < 512:
             raise RuntimeError("Generated photo too small")
-        filename=f"car-{i}.jpg"
+        filename = f"car-{i}.jpg"
         im.save(OUT/filename, quality=94, optimize=True, subsampling=0)
-        portrait_name=f"portrait-car-{i}.jpg"
-        portrait_frame(im).save(OUT/portrait_name,quality=90,optimize=True,subsampling=0)
-        manifest["images"].append({"file":filename,"portrait_file":portrait_name,"concept":label,"prompt":prompt,
-            "width":im.width,"height":im.height})
-        print(f"Saved image {i}: {filename}, {im.width}x{im.height}")
-    (OUT/"post.json").write_text(json.dumps(manifest,indent=2,ensure_ascii=False),encoding="utf-8")
-    print("SUCCESS: 2 AI photos + 2 separate 9:16 portraits created. Nothing published. Visual approval required.")
+        portrait_name = f"portrait-car-{i}.jpg"
+        portrait_frame(im).save(OUT/portrait_name, quality=90, optimize=True, subsampling=0)
+        manifest["images"].append({
+            "file": filename, "portrait_file": portrait_name,
+            "concept": label, "prompt": prompt, "width": im.width, "height": im.height
+        })
+        print(f"Saved FUTURE / IMPOSSIBLE concept {i}: {label}, {im.width}x{im.height}")
+    (OUT/"post.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    print("Created 2 radical concept photos + separate 9:16 portraits. NOTHING published.")
 
 def main():
-    p=argparse.ArgumentParser()
-    p.add_argument("--day",default=dt.date.today().isoformat())
-    p.add_argument("--slot",type=int,default=1,choices=[1,2])
-    p.add_argument("--demo",action="store_true")
-    args=p.parse_args()
-    run(args.day,args.slot,args.demo)
+    p = argparse.ArgumentParser()
+    p.add_argument("--day", default=dt.date.today().isoformat())
+    p.add_argument("--slot", type=int, default=1, choices=[1, 2])
+    p.add_argument("--demo", action="store_true")
+    args = p.parse_args()
+    run(args.day, args.slot, args.demo)
 
-if __name__=="__main__":main()
+if __name__ == "__main__":
+    main()
