@@ -115,3 +115,13 @@ Buffer returned post ID `6af1dbc2010fa6782143d2b5`, initial status `sending`. Su
 https://tiktok.com/@seibelgram/video/7706182049387777312
 
 **This second post is confirmed by Buffer as published.** If TikTok photo URLs redirect to /video/, use Buffer's returned official externalLink verbatim. No duplicate was attempted. The recurring autonomous posting switch remains OFF; two daily candidate-generation and QA schedules are present, but they do not publish.
+
+
+## ORIGINAL MUSIC for future posts — prototype 2026-11-09
+
+- Buffer's automatic TikTok publishing cannot access TikTok's music or trending sound library. For platform-selected TikTok songs, Buffer needs **notification publishing**, finished manually in TikTok. See https://support.buffer.com/articles/adding-music-stickers-and-other-effects-to-instagram-and-tiktok-posts-G5QrWfQL4k
+- The **default future plan** is automatically-created short **9-second 9:16 MP4** from a previously editorial-approved vertical photo with slight camera movement and original algorithmically synthesized electronic audio, rather than uploading musicless still-image posts.
+- `reel_from_photo.py --image <approved-portrait.jpg> --output <reel.mp4> --style neon-pulse` has 3 variations: `neon-pulse`, `deep-motion`, `glacier-drive`. No external recordings, samples, music downloads, copyrighted tracks, platform song IDs, fees or third-party models. MP4 output is 720×1280 H.264 video + AAC audio.
+- `test_reel_from_photo.py` verifies sound tracks, shape guard, and (on a runner with FFmpeg) rendered AAC MP4. The first GitHub job failed only because FFmpeg wasn't installed; a follow-up installs FFmpeg.
+- This is a **review-only prototype** and does not change any already-sent TikTok photo or enable automatic live publishing. Include musical shorts in future release workflows only after verifying video quality, Buffer's MP4 behavior, quality gate, and duplicate protection.
+- For commercial posts promoting products or a brand, TikTok advises using music from their Commercial Music Library or using sounds for which the creator has appropriate rights. See https://support.tiktok.com/en/business-and-creator/creator-and-business-accounts/commercial-use-of-music-on-tiktok
