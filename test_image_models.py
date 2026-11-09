@@ -42,6 +42,19 @@ class Flux2BackendTest(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError,"No paid plan"):
                     image_models.get_image("future car",False,0)
 
+    def test_retries_transient_500_exactly_once(self):
+        b=io.BytesIO()
+        Image.new("RGB",(1024,1024)).save(b,format="PNG")
+        fail=Mock(status_code=500)
+        okay=Mock(status_code=200)
+        okay.json.return_value={"success":True,
+            "result":{"image":base64.b64encode(b.getvalue()).decode()}}
+        with patch.dict("os.environ",{"CF_ACCOUNT_ID":"acc","CF_API_TOKEN":"tok"},clear=True):
+            with patch.object(image_models.requests,"post",side_effect=[fail,okay]) as send:
+                with patch.object(image_models.time,"sleep"):
+                    photo=image_models.get_image("radical vehicle",False,0)
+        self.assertEqual(photo.size,(1024,1024))
+        self.assertEqual(send.call_count,2)
     def test_overlong_prompt_fails_before_api(self):
         with patch.dict("os.environ",{"CF_ACCOUNT_ID":"acc","CF_API_TOKEN":"tok"},clear=True):
             with patch.object(image_models.requests,"post") as post:
