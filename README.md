@@ -68,3 +68,11 @@ Editorial benchmarks can be prepared separately, but generating a higher-quality
 ### Free-plan alternative quality test
 
 Cloudflare Workers AI lists `@cf/black-forest-labs/flux-2-klein-9b` as a hosted text-to-image model with multi-reference support. Official free-plan quota is 10,000 Neurons/day; a single 1024×1024 output uses about 1,364 Neurons at published rates. `verify_flux2_klein.py` requests **ONE** sample using multipart form data and existing Cloudflare Free secrets; it does not enable a paid tier or send any post. Production generators stay on the known model until the sample succeeds and visual quality is reviewed.
+
+### Verified FLUX.2 Klein 9B on existing Free account
+
+[Actions run 42541515481](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42541515481) confirmed one actual `@cf/black-forest-labs/flux-2-klein-9b` generation using the existing Cloudflare Free token and multipart form API. The output is a recognizable 4-wheeled radical concept compared with earlier FLUX.1 batches. **No paid plan, API billing, or public social posting was activated.**
+
+`photo_bot.py` now uses the tested `image_models.py` backend for candidate photos. This backend **fails closed** when free-tier capacity is exhausted or a token is unavailable, with no fallback to paid services or the low-fidelity generator. The legacy `bot.py` video path is unchanged to keep within the daily quota; FLUX.2 9B pricing currently uses roughly **1,364 Neurons per 1024² image**, with 10,000 free daily Neurons shared by all Workers AI inference. Two daily batches of two photos are approximately 5,455 Neurons before QA, but manual tests and other usage can consume additional daily allocation.
+
+The FLUX.2 candidate batch is reviewed by `quality_gate.py` and archived. The scheduled jobs still do **not** publish to TikTok/Instagram.
