@@ -16,6 +16,19 @@ class BotTests(unittest.TestCase):
         self.assertEqual(a,b)
         self.assertNotEqual(a["labels"][0],a["labels"][1])
         self.assertIn("AI-generated",a["caption"])
+    def test_video_has_distinct_colors_and_locations_per_post(self):
+        for slot in (1,2):
+            data=bot.concept("2026-11-09",slot)
+            self.assertEqual(len(data["prompts"]),2)
+            self.assertIn("NO sunset",data["prompts"][0])
+            self.assertIn("NO sunset",data["prompts"][1])
+            colours=[next((x for x in bot.COLORS if x in prompt),None)
+                     for prompt in data["prompts"]]
+            places=[next((x for x in bot.PLACES if x in prompt),None)
+                    for prompt in data["prompts"]]
+            self.assertEqual(len(set(colours)),2)
+            self.assertEqual(len(set(places)),2)
+            self.assertTrue(all(x is not None for x in colours + places))
     def test_clean_frame_contains_no_rendered_typography(self):
         src = inspect.getsource(bot.slide)
         self.assertNotIn(".text(", src)
