@@ -8,7 +8,7 @@ import datetime as dt
 import json
 import random
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageOps, ImageFilter
 from bot import get_image
 
 OUT = Path("photo_output")
@@ -26,16 +26,33 @@ LOCATIONS = [
     "an illuminated premium concrete pavilion at dusk with soft atmospheric depth and realistic reflected light",
     "a silent minimalist design gallery with sophisticated indirect lighting and dramatic physically realistic shadows"
 ]
+VIEWS=[
+    ("front_three_quarter", "low FRONT three-quarter camera angle, front headlights and one full side clearly visible"),
+    ("true_side_profile", "STRICT ORTHOGRAPHIC SIDE PROFILE, camera 90 degrees perpendicular to the vehicle length, showing its complete silhouette"),
+    ("rear_three_quarter", "low REAR three-quarter camera angle, tail lamps and one full side clearly visible"),
+    ("front_head_on", "low centered FRONT head-on camera angle, full car and both front wheels visible"),
+]
+
+def portrait_frame(image):
+    """Vertical 9:16 with unaltered whole vehicle in the central sharp photo."""
+    canvas=ImageOps.fit(image,(1080,1920),method=Image.Resampling.LANCZOS)
+    canvas=canvas.filter(ImageFilter.GaussianBlur(42)).convert("RGB")
+    art=ImageOps.contain(image,(1080,1680),method=Image.Resampling.LANCZOS).convert("RGB")
+    canvas.paste(art,((1080-art.width)//2,(1920-art.height)//2))
+    return canvas
+
 def prompts_for(day,slot):
     rng=random.Random(f"SEIBELGRAM-photos-v1:{day}:{slot}")
     choices=rng.sample(THEMES,2)
     colors=rng.sample(PALETTES,2)
     locations=rng.sample(LOCATIONS,2)
+    base_view=(int(day.replace("-",""))+slot*2)%len(VIEWS)
+    views=[VIEWS[base_view],VIEWS[(base_view+1)%len(VIEWS)]]
     prompts=[]
-    for (name,design),color,place in zip(choices,colors,locations):
+    for (name,design),color,place,(view_name,view_text) in zip(choices,colors,locations,views):
         prompts.append(
             f"Commercial luxury automotive concept photography, visually breathtaking original imagined car: {design}. "
-            f"Finish: {color}; environment: {place}. Three-quarter SIDE / rear oblique view, whole car visible, "
+            f"Finish: {color}; environment: {place}. Camera: {view_text}. Entire vehicle visible and not cropped, "
             "premium high-end CGI indistinguishable from a professional car photography campaign, complex "
             "realistic reflections, rich volumetric shadows, purposeful functional automotive details, "
             "coherent tires and wheels, cinematic photographic lens, no floating car. "
@@ -63,11 +80,13 @@ def run(day,slot,demo=False):
             raise RuntimeError("Generated photo too small")
         filename=f"car-{i}.jpg"
         im.save(OUT/filename, quality=94, optimize=True, subsampling=0)
-        manifest["images"].append({"file":filename,"concept":label,"prompt":prompt,
+        portrait_name=f"portrait-car-{i}.jpg"
+        portrait_frame(im).save(OUT/portrait_name,quality=90,optimize=True,subsampling=0)
+        manifest["images"].append({"file":filename,"portrait_file":portrait_name,"concept":label,"prompt":prompt,
             "width":im.width,"height":im.height})
         print(f"Saved image {i}: {filename}, {im.width}x{im.height}")
     (OUT/"post.json").write_text(json.dumps(manifest,indent=2,ensure_ascii=False),encoding="utf-8")
-    print("SUCCESS: 2 photo previews created. Nothing published. Visual approval is required.")
+    print("SUCCESS: 2 AI photos + 2 separate 9:16 portraits created. Nothing published. Visual approval required.")
 
 def main():
     p=argparse.ArgumentParser()
