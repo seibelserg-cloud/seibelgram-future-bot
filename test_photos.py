@@ -27,9 +27,24 @@ class PhotoTests(unittest.TestCase):
             self.assertFalse(metadata["approved_for_publication"])
             self.assertFalse(metadata["published"])
             self.assertEqual(len(metadata["images"]),2)
+            self.assertEqual(metadata["images"][0]["portrait_file"],"portrait-car-1.jpg")
+            with Image.open(Path(t)/"portrait-car-1.jpg") as portrait:
+                self.assertEqual(portrait.size,(1080,1920))
+                self.assertTrue(all(abs(a-b)<=3 for a,b in zip(portrait.getpixel((540,960)),(36,71,110))))
             with Image.open(Path(t)/"car-1.jpg") as im:
                 self.assertEqual(im.size,(1024,1024))
                 self.assertTrue(all(abs(a-b) <= 3 for a,b in zip(im.getpixel((512,512)),(36,71,110))))
+    def test_prompts_vary_camera_angles(self):
+        _,prompts=photo_bot.prompts_for("2026-11-09",1)
+        self.assertNotEqual(prompts[0],prompts[1])
+        self.assertTrue(any("STRICT ORTHOGRAPHIC SIDE PROFILE" in p or "FRONT" in p or "REAR" in p for p in prompts))
+    def test_9_16_frame_does_not_write_text(self):
+        import inspect
+        src=inspect.getsource(photo_bot.portrait_frame)
+        self.assertNotIn("ImageDraw",src)
+        self.assertNotIn(".text(",src)
+        photo=Image.new("RGB",(1024,1024),(95,108,126))
+        self.assertEqual(photo_bot.portrait_frame(photo).size,(1080,1920))
     def test_draft_payload_never_schedules_or_publishes(self):
         urls=["https://raw.githubusercontent.com/seibelserg-cloud/seibelgram-future-bot/main/photo-test/car-1.jpg"]
         payload=photo_draft.make_draft_payload("channel",urls)
