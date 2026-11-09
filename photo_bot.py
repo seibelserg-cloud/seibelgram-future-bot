@@ -10,7 +10,7 @@ import json
 import random
 from pathlib import Path
 from PIL import Image, ImageOps, ImageFilter
-from bot import get_image
+from image_models import get_image
 
 OUT = Path("photo_output")
 
@@ -113,7 +113,7 @@ def run(day, slot, demo=False, showcase=False):
     OUT.mkdir(parents=True, exist_ok=True)
     manifest = {
         "day": day, "slot": slot, "creative_version": "FUTURE-IMPOSSIBLE-01",
-        "showcase": showcase,
+        "showcase": showcase, "image_model": "@cf/black-forest-labs/flux-2-klein-9b",
         "demo": demo, "images": [],
         "requires_visual_review": True,
         "approved_for_publication": False,
