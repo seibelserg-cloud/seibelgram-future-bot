@@ -17,29 +17,27 @@ OUT = Path("photo_output")
 # Internal labels are only for metadata/captions; NEVER render labels in artwork.
 THEMES = [
     ("MONOLITH",
-     "A radically original 2055 monolithic mobility sculpture. One seamless cast-metal volume like a liquid "
-     "titanium pebble shaped by supersonic wind. A continuous ultra-low black glass cockpit is fused into the "
-     "upper shell; the four enormous wheels emerge from precise circular cutouts in otherwise perfectly calm "
-     "surfaces. No visible bonnet seam, conventional grille, door handles or typical passenger-car architecture. "
-     "The silhouette must be a striking single architectural gesture, not a familiar coupe. "
-     "Two large distinct front/rear wheel arches on the camera-facing side must reveal clearly separated "
-     "real rubber tires and mechanical wheel rims; NEVER a featureless wheelless pod."),
+     "A revolutionary full-size five-meter-long, ultra-low four-wheeled concept GT with the proportions "
+     "of an exotic flagship sports car, not a tiny pod. One continuous angular ceramic shell, long "
+     "flattened nose, sharply stretched rear deck, wide ground-hugging chassis and a narrow swept-back "
+     "black glass roof. Two deep negative-space side channels cut THROUGH its sculpted bodywork. "
+     "Four large REAL wheels mounted in integrated wheel arches on two conventional axles. "
+     "The front and rear side wheels remain separated and clearly visible. Absolutely NOT a rounded "
+     "egg-shaped pod, open-wheel buggy, robotaxi, three-wheeler, toy car, or levitating capsule."),
     ("AERO BEAST",
-     "An unprecedented 2060 high-speed aerodynamic organism, ultra-low and extremely long, with twin huge "
-     "load-bearing flying buttresses, open-air tunnels passing THROUGH the sculptural central body, an elongated "
-     "fighter-jet glass canopy, an extreme tapered tail, four huge engineered wheels and exceptionally wide track. "
-     "Aggressively beautiful, almost impossible but mechanically plausible. No ordinary supercar nose, generic "
-     "sports-car proportions, conventional radiator grille or pasted-on wings. "
-     "The vehicle must have EXACTLY four conventional ground-contact tires, in a believable front and rear "
-     "axle layout. Two distinctly visible wheels on the near side, neither hovering nor merging with wings."),
+     "A wildly original full-size 2060 ultra-low track hypercar, dramatically wider than tall, "
+     "with front and rear rubber tires enclosed INSIDE four oversized integrated fenders. "
+     "An extremely long fighter-jet-like roofline, hollow structural aero tunnels, twin sweeping "
+     "flying buttresses, dramatic flared front fenders and an elegant tapering tail. "
+     "Radical physically possible silhouette unlike a roadgoing sports car. EXACTLY four wheels "
+     "on two axles, resting on the ground, no extra or disconnected wheels. NOT a miniature buggy."),
     ("SPACE LIMO",
-     "A visionary 2058 ultra-luxury ground vessel, with extremely long wheelbase, panoramic teardrop-shaped "
-     "glass passenger capsule, radically sculpted continuous floating outer hull, dramatically extended rear "
-     "deck and four large partly recessed wheels. Futuristic mobile architecture, peaceful yet imposing, "
-     "almost spacecraft-like without flying. No typical four-door sedan body, no SUV cabin, no boxy roof, "
-     "no familiar luxury brand design or conventional trunk. "
-     "It MUST visibly roll on exactly four real rubber tires, two distinct wheels on the visible side, "
-     "with realistic front and rear axles and ground contact, never hover or use duplicate wheel pairs.")
+     "A radically futuristic six-meter-long, extremely low exotic luxury fastback ground vehicle. "
+     "A long powerful front section, ultra-extended rear deck, sweeping low glass roofline and "
+     "monolithic blade-like body sides create an extraordinary executive GT silhouette. "
+     "Exactly four ordinary road wheels at front and rear axles, deeply enclosed in "
+     "wide sculptural fenders, wide body, long wheelbase and very low height. "
+     "NOT a bubble pod, autonomous bus, minivan, microcar or three-wheeled urban capsule."),
 ]
 # Deliberately NOT a catalog of chrome/silver cars at sunset.
 # Keep color and location diversified independently across days and slots.
@@ -80,7 +78,7 @@ VIEWS = [
     ("front_three_quarter", "low FRONT three-quarter camera, one complete side and entire nose visible"),
     ("true_side_profile", "STRICT true SIDE PROFILE, perpendicular 90-degree camera, entire silhouette from nose to tail"),
     ("rear_three_quarter", "low REAR three-quarter camera, one complete side and full tapered tail visible"),
-    ("front_head_on", "low centered FRONT head-on camera, symmetric nose and both front wheels visible"),
+    ("front_three_quarter_right", "low FRONT three-quarter camera from the opposite side, both axles and broad side silhouette visible"),
 ]
 
 CORE_STYLE = (
