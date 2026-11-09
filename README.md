@@ -54,3 +54,7 @@ The creative engine in `photo_bot.py` now uses **three extreme separate design d
 Each prompt prioritizes unmistakable silhouette innovation over common LED facelift styling, and explicitly forbids text, badges, watermarks, brand marks, plates and collages. The video generator `bot.py` uses the same 3 directions. Photos are prepared as individual 1080×1920 portrait JPGs (with original image preserved in center); they are **not** actual new CAD camera angles and may still contain invented marks from the diffusion model.
 
 `python photo_bot.py --showcase` requests all **three** designs in one run for offline review; ordinary scheduled generation still makes 2 candidates per batch. GitHub Actions is configured for a single showcase run; AI image QA and visual human review occur before **any** public post. Automatic public TikTok posting stays disabled.
+
+### Showcase QA iteration 1
+
+Run [42540650445](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42540650445) generated three real AI concept photos and three 1080×1920 portraits. All passed code tests; automated visual QA declined all 3 for uncertain wheel/vehicle geometry and/or photo quality, so nothing was posted. This drove a second iteration: fixed front/rear axle and tire-ground-contact requirements and more informative front/side three-quarter views. The following showcase run tests those corrections.
