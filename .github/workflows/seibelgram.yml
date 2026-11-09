@@ -157,7 +157,7 @@ jobs:
 
   photo_preview:
     # Generates still images only; no TikTok or Buffer API request is made.
-    if: (github.event_name == 'workflow_dispatch' && inputs.photos == true) || (github.event_name == 'push' && github.event.head_commit.message == 'Generate SEIBELGRAM photo preview')
+    if: (github.event_name == 'workflow_dispatch' && inputs.photos == true) || (github.event_name == 'push' && (github.event.head_commit.message == 'Generate SEIBELGRAM photo preview' || github.event.head_commit.message == 'Generate SEIBELGRAM impossible showcase'))
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -173,16 +173,23 @@ jobs:
         run: |
           python -m unittest -v test_bot
           python -m unittest -v test_photos
-      - name: Generate two AI photos, without any text overlays
+          python -m unittest -v test_quality_gate
+      - name: Generate original AI photos with no collages or text
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-        run: python photo_bot.py
+          SHOWCASE: ${{ github.event_name == 'push' && github.event.head_commit.message == 'Generate SEIBELGRAM impossible showcase' }}
+        run: |
+          if [ "$SHOWCASE" = "true" ]; then
+            python photo_bot.py --showcase
+          else
+            python photo_bot.py
+          fi
       - name: Run free AI vision quality gate on new photos (NO publication)
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-        run: python quality_gate.py photo_output/car-1.jpg photo_output/car-2.jpg --online --output photo_output/qa-report.json
+        run: python quality_gate.py photo_output/car-*.jpg --online --output photo_output/qa-report.json
       - name: Archive photos and captions for review
         if: success()
         uses: actions/upload-artifact@v4
