@@ -21,19 +21,25 @@ THEMES = [
      "titanium pebble shaped by supersonic wind. A continuous ultra-low black glass cockpit is fused into the "
      "upper shell; the four enormous wheels emerge from precise circular cutouts in otherwise perfectly calm "
      "surfaces. No visible bonnet seam, conventional grille, door handles or typical passenger-car architecture. "
-     "The silhouette must be a striking single architectural gesture, not a familiar coupe."),
+     "The silhouette must be a striking single architectural gesture, not a familiar coupe. "
+     "Two large distinct front/rear wheel arches on the camera-facing side must reveal clearly separated "
+     "real rubber tires and mechanical wheel rims; NEVER a featureless wheelless pod."),
     ("AERO BEAST",
      "An unprecedented 2060 high-speed aerodynamic organism, ultra-low and extremely long, with twin huge "
      "load-bearing flying buttresses, open-air tunnels passing THROUGH the sculptural central body, an elongated "
      "fighter-jet glass canopy, an extreme tapered tail, four huge engineered wheels and exceptionally wide track. "
      "Aggressively beautiful, almost impossible but mechanically plausible. No ordinary supercar nose, generic "
-     "sports-car proportions, conventional radiator grille or pasted-on wings."),
+     "sports-car proportions, conventional radiator grille or pasted-on wings. "
+     "The vehicle must have EXACTLY four conventional ground-contact tires, in a believable front and rear "
+     "axle layout. Two distinctly visible wheels on the near side, neither hovering nor merging with wings."),
     ("SPACE LIMO",
      "A visionary 2058 ultra-luxury ground vessel, with extremely long wheelbase, panoramic teardrop-shaped "
      "glass passenger capsule, radically sculpted continuous floating outer hull, dramatically extended rear "
      "deck and four large partly recessed wheels. Futuristic mobile architecture, peaceful yet imposing, "
      "almost spacecraft-like without flying. No typical four-door sedan body, no SUV cabin, no boxy roof, "
-     "no familiar luxury brand design or conventional trunk.")
+     "no familiar luxury brand design or conventional trunk. "
+     "It MUST visibly roll on exactly four real rubber tires, two distinct wheels on the visible side, "
+     "with realistic front and rear axles and ground contact, never hover or use duplicate wheel pairs.")
 ]
 PALETTES = [
     "brushed liquid platinum with obsidian glazing",
@@ -61,7 +67,8 @@ CORE_STYLE = (
     "are FAR more important than headlights, surface graphics or LED stripes. This is NOT an SUV, "
     "NOT a conventional sports coupe, NOT a facelift, NOT a recognizable brand or current road car. "
     "Photorealistic premium industrial-design CGI, physically coherent surfaces and wheel placement, "
-    "four believable wheels, sophisticated reflections, rich architectural lighting, entirely visible "
+    "4 distinct ground-touching tires on 2 axles, BOTH wheel arches clearly visible on near side, "
+    "nonhovering realistic chassis, sophisticated reflections, rich architectural lighting, entirely visible "
     "vehicle with space around its edges, ONE vehicle only."
 )
 CLEAN = (
@@ -85,7 +92,10 @@ def prompts_for(day, slot, showcase=False):
     colors = rng.sample(PALETTES, len(choices))
     locations = rng.sample(LOCATIONS, len(choices))
     base = (int(day.replace("-", "")) + slot*2) % len(VIEWS)
-    views = [VIEWS[(base+i) % len(VIEWS)] for i in range(len(choices))]
+    # Fixed three-quarter / full side views expose axle geometry during showcase review.
+    views = [VIEWS[0], VIEWS[2], VIEWS[1]] if showcase else [
+        VIEWS[(base+i) % len(VIEWS)] for i in range(len(choices))
+    ]
     prompts = []
     for (_, design), color, place, (_, view) in zip(choices, colors, locations, views):
         prompt = (
