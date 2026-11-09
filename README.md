@@ -80,3 +80,9 @@ The FLUX.2 candidate batch is reviewed by `quality_gate.py` and archived. The sc
 ### First 9B photo batch and transient error protection
 
 [Workflow 42541887962](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42541887962) confirmed new 9B photo engine and 26 offline tests, but after the first image Cloudflare returned **HTTP 500** during the second image. No public post was attempted. The bot now retries a **temporary model-side HTTP 500/502/503/504 only once**; it never retries Buffer publishing or Free quota errors, and it records partial successful photos in the Actions artifact. This update is tested by offline simulated 500 and partial-batch tests.
+
+### FLUX.2 first successful full candidate batch — 2026-11-09
+
+[Run 42542160170](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42542160170): Both real FLUX.2 Klein 9B images generated successfully using the **existing Cloudflare Free account**, and every offline test passed. The artifact `seibelgram-photo-preview` contains two independent originals, two vertical 1080×1920 versions, metadata and quality report. Automated vision **withheld both**: the MONOLITH candidate did not meet the conservative confidence requirements for complete single vehicle/geometry/pro quality; the SPACE LIMO candidate also had possible branding. Manual review found designs not yet at high enough editorial standard for publication. Therefore **zero new social posts**; unattended publishing remains disabled.
+
+The Free model experiment proved API compatibility but not automatic editorial-grade content. The strict gate is intentional. Separately created high-quality 9:16 concept artwork inside ChatGPT is an editorial benchmark, not a claim that unattended GitHub + Cloudflare will generate the same visuals.
