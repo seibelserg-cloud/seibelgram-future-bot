@@ -436,3 +436,38 @@ jobs:
           name: seibelgram-flux2-klein-test
           path: flux2-klein-smoke.jpg
           retention-days: 7
+
+  nov9_one_photo_candidate:
+    # Emergency one-shot review only: real free Flux 2 image and QA report, no social posting.
+    if: github.event_name == 'push' && github.event.head_commit.message == 'Generate Nov 9 SEIBELGRAM candidate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: python -m pip install -r requirements.txt
+      - name: Generate one new car portrait and caption
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: python today_candidate.py
+      - name: Real AI vision review
+        if: success()
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: python quality_gate.py today_candidate/source.jpg --online --output today_candidate/qa-report.json
+      - name: Preserve images even if QA service fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seibelgram-nov9-single-candidate
+          path: today_candidate/
+          retention-days: 7
