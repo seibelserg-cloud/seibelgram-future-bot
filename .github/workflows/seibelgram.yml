@@ -305,6 +305,7 @@ jobs:
         run: |
           python -m unittest -v test_bot
           python -m unittest -v test_photos
+          python -m unittest -v test_quality_gate
       - name: Verify Buffer still connected to @seibelgram (read only)
         env:
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
@@ -313,3 +314,80 @@ jobs:
         run: |
           echo "SEIBELGRAM healthcheck completed. NO post created."
           echo "Unattended publishing remains disabled pending Buffer incident closure, deduplication and visual QA."
+
+  qa_smoke_once:
+    # Explicit check against two known generated photos; never writes to Buffer.
+    if: github.event_name == 'push' && github.event.head_commit.message == 'Run SEIBELGRAM AI visual QA smoke test'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: All fail-closed tests
+        run: |
+          python -m unittest -v test_quality_gate
+          python -m unittest -v test_photos
+          python -m unittest -v test_bot
+      - name: Assess two known images with AI vision without posting
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          python quality_gate.py             content/test-2026-11-08/car-1.jpg             content/test-2026-11-08/car-2.jpg             --archive content/first-live-test-2026-11-08             --online --output qa-smoke-report.json
+      - name: Store QA results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seibelgram-qa-smoke
+          path: qa-smoke-report.json
+          retention-days: 7
+
+  daily_candidate_qa:
+    # Two daily photo batches, guarded by strict QA. This NEVER publishes anything.
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: python -m pip install -r requirements.txt
+      - name: Run quality safety tests
+        run: python -m unittest -v test_quality_gate test_photos
+      - name: Generate separate image candidates
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CRON_EXPRESSION: ${{ github.event.schedule }}
+        run: |
+          set -eu
+          SLOT=1
+          if [ "$CRON_EXPRESSION" = '7 18 * * *' ]; then SLOT=2; fi
+          python photo_bot.py --slot "$SLOT"
+      - name: Run real visual QA, check branding, originality and duplicate images
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: python quality_gate.py photo_output/car-1.jpg photo_output/car-2.jpg --online --output photo_output/qa-report.json
+      - name: Archive candidate images and QA report; NOT published
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seibelgram-daily-qa-candidates
+          path: photo_output/
+          if-no-files-found: ignore
+          retention-days: 7
