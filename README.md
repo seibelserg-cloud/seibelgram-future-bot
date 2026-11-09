@@ -76,3 +76,7 @@ Cloudflare Workers AI lists `@cf/black-forest-labs/flux-2-klein-9b` as a hosted 
 `photo_bot.py` now uses the tested `image_models.py` backend for candidate photos. This backend **fails closed** when free-tier capacity is exhausted or a token is unavailable, with no fallback to paid services or the low-fidelity generator. The legacy `bot.py` video path is unchanged to keep within the daily quota; FLUX.2 9B pricing currently uses roughly **1,364 Neurons per 1024² image**, with 10,000 free daily Neurons shared by all Workers AI inference. Two daily batches of two photos are approximately 5,455 Neurons before QA, but manual tests and other usage can consume additional daily allocation.
 
 The FLUX.2 candidate batch is reviewed by `quality_gate.py` and archived. The scheduled jobs still do **not** publish to TikTok/Instagram.
+
+### First 9B photo batch and transient error protection
+
+[Workflow 42541887962](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42541887962) confirmed new 9B photo engine and 26 offline tests, but after the first image Cloudflare returned **HTTP 500** during the second image. No public post was attempted. The bot now retries a **temporary model-side HTTP 500/502/503/504 only once**; it never retries Buffer publishing or Free quota errors, and it records partial successful photos in the Actions artifact. This update is tested by offline simulated 500 and partial-batch tests.
