@@ -15,7 +15,7 @@ class PhotoTests(unittest.TestCase):
         self.assertEqual({name for name,_ in photo_bot.THEMES},{"MONOLITH","AERO BEAST","SPACE LIMO"})
         for prompt in p:
             self.assertIn("no badges",prompt.lower())
-            self.assertIn("no watermark",prompt.lower())
+            self.assertIn("watermark",prompt.lower())
             self.assertIn("text",prompt.lower())
             self.assertIn("not an suv",prompt.lower())
             self.assertIn("design leap",prompt.lower())
@@ -40,6 +40,12 @@ class PhotoTests(unittest.TestCase):
             self.assertEqual(data["creative_version"],"FUTURE-IMPOSSIBLE-01")
             self.assertFalse(data["approved_for_publication"])
             self.assertFalse(data["published"])
+    def test_full_showcase_has_three_individual_concepts(self):
+        themes,prompts=photo_bot.prompts_for("2026-11-09",1,showcase=True)
+        self.assertEqual([x[0] for x in themes],["MONOLITH","AERO BEAST","SPACE LIMO"])
+        self.assertEqual(len(prompts),3)
+        self.assertEqual(len(set(prompts)),3)
+        self.assertTrue(all(len(p)<=2048 for p in prompts))
     def test_generate_is_review_only_and_no_typography(self):
         with tempfile.TemporaryDirectory() as t:
             with patch.object(photo_bot,"OUT",Path(t)), patch.object(photo_bot,"get_image",
