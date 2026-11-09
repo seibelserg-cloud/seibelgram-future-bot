@@ -97,3 +97,12 @@ Owner rejected the repetitive **metallic cars under sunset beside curved luxury 
 - Both images in a video use **different backgrounds**, not the same scenic gallery. Avoid sunset/sunrise, wet mirror floors, curved showroom architecture, chrome, gold/bronze, rainy neon city and luxury villas.
 - Production stays **review-only**, 2 daily candidate batches with visual QA and separate 1080×1920 photographs. Do not publish an unreviewed or failed image; the visual diffusion model is not guaranteed to honor all aesthetic instructions.
 
+
+### V2 diverse color/location live generation check
+
+[Actions run 42544646321](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42544646321) generated two live FLUX.2 1024×1024 candidate photos with **different, nonmetallic paint schemes and backgrounds**, plus separate 1080×1920 images:
+- MONOLITH: matte turquoise with a dry autumn wheat field and wind turbines in diffuse daylight
+- SPACE LIMO: powder-blue in daylight on a snow-covered wind-farm road
+
+This confirms that the prompt rotation actually changes colors and locations. **It does NOT confirm good vehicle designs:** both candidates were rejected by the conservative visual AI filter for incomplete/incorrect vehicle geometry and other photo quality uncertainty. Manual visual inspection confirms toy/pod-like bodies that fail the editorial goal. **No posts sent.** Retain the rotation but further improve the model/vehicle form before any unattended TikTok posting. The two manually attempted alternative image edits also kept reverting to the familiar luxury-pavilion look and were discarded.
+
