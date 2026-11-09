@@ -37,9 +37,28 @@ class PhotoTests(unittest.TestCase):
                 photo_bot.run("2026-11-09",1,True)
             import json
             data=json.loads((Path(t)/"post.json").read_text())
-            self.assertEqual(data["creative_version"],"FUTURE-IMPOSSIBLE-01")
+            self.assertEqual(data["creative_version"],"FUTURE-VARIETY-02")
             self.assertFalse(data["approved_for_publication"])
             self.assertFalse(data["published"])
+    def test_diverse_colours_and_scenes_not_repeated_in_daily_batch(self):
+        seen_colours=set()
+        seen_scenes=set()
+        for offset in range(12):
+            from datetime import date,timedelta
+            day=(date(2026,11,9)+timedelta(days=offset)).isoformat()
+            for slot in (1,2):
+                names,prompts=photo_bot.prompts_for(day,slot)
+                self.assertEqual(len(prompts),2)
+                self.assertNotEqual(prompts[0],prompts[1])
+                for prompt in prompts:
+                    self.assertIn("NO sunset or sunrise",prompt)
+                    self.assertIn("NO manufacturer identity",prompt)
+                    self.assertLessEqual(len(prompt),2048)
+                    seen_colours.update(x for x in photo_bot.PALETTES if x in prompt)
+                    seen_scenes.update(x for x in photo_bot.LOCATIONS if x in prompt)
+        self.assertGreaterEqual(len(seen_colours),10)
+        self.assertGreaterEqual(len(seen_scenes),10)
+        self.assertFalse(any("polished-concrete museum" in x for x in photo_bot.LOCATIONS))
     def test_full_showcase_has_three_individual_concepts(self):
         themes,prompts=photo_bot.prompts_for("2026-11-09",1,showcase=True)
         self.assertEqual([x[0] for x in themes],["MONOLITH","AERO BEAST","SPACE LIMO"])
