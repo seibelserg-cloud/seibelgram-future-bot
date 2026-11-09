@@ -191,12 +191,13 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: python quality_gate.py photo_output/car-*.jpg --online --output photo_output/qa-report.json
-      - name: Archive photos and captions for review
-        if: success()
+      - name: Archive successful photos and failure report for review
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: seibelgram-photo-preview
           path: photo_output/
+          if-no-files-found: ignore
           retention-days: 7
 
   stage_photo_draft_once:
