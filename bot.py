@@ -18,13 +18,9 @@ ROOT=Path(__file__).resolve().parent
 SITE=ROOT/"site"
 MODEL="@cf/black-forest-labs/flux-1-schnell"
 CARS=[
- ("HYPERCAR","radical two-seat electric hypercar with aerodynamic channels"),
- ("GT TOURING","sleek futuristic long-roof grand touring shooting brake"),
- ("LUXURY SEDAN","four-door high-performance executive sports sedan"),
- ("CYBER ROADSTER","low futuristic open-cockpit two-seat roadster"),
- ("TRACK PROTOTYPE","dramatic experimental track-inspired coupe"),
- ("FUTURE WAGON","muscular aerodynamic luxury electric touring car"),
- ("ELECTRIC COUPE","avant-garde sculptural electric sport coupe")
+ ("MONOLITH","one radical monolithic ground-transport sculpture, single seamless cast-titanium hull, continuous ultra-low obsidian glass canopy, four deeply integrated enormous wheels, no conventional hood or door lines, museum-grade futuristic massing"),
+ ("AERO BEAST","unprecedented very low, very long extreme hypercar with vast engineered aerodynamic tunnels passing through the main body, twin load-bearing flying buttresses, fighter-jet style canopy, and a long sharp tapered tail, four believable wheels"),
+ ("SPACE LIMO","extraordinary elongated luxury ground vessel, breathtaking panoramic teardrop glass passenger capsule, sculptural floating continuous hull, four partly recessed enormous wheels, radical 2058 proportions unlike any familiar executive sedan")
 ]
 COLORS=["liquid chrome","champagne titanium","deep emerald metallic","graphite silver","pearl white","cobalt blue","warm bronze metallic"]
 PLACES=["a monumental polished-concrete architectural studio","a coastal modernist pavilion at dusk","a minimalist glass-and-steel automotive design museum","a white futuristic design laboratory"]
@@ -43,8 +39,10 @@ def concept(day, slot):
                 "The entire hood, front grille, nose, bumper, wheel hubs and body panels are completely unbranded and blank. "
                 "Absolutely NO brand badge, NO invented emblem, NO crest, NO manufacturer symbol, NO hood ornament, "
                 "NO lettering, NO signage, NO text, NO license plate, NO watermark, NO identifiable brand marks anywhere. "
-                "Original experimental design, not a copy of an existing car. No people, no collage, no distorted wheels.")
-    return dict(title=f"FUTURE CARS {year}: A vs B",date=day,slot=slot,
+                "Original experimental impossible-looking design from a far future, unlike ANY current production car. "
+                "Avoid contemporary SUV, ordinary sedan, traditional sports coupe, familiar grille, standard doorhandles. "
+                "Unforgettable radical silhouette, not merely modern LED strips. No people, no collage, no distorted wheels.")
+    return dict(title=f"FUTURE / IMPOSSIBLE {year}: A vs B",date=day,slot=slot,
                 prompts=[prompt(sa,ca),prompt(sb,cb)],
                 labels=[na,nb],
                 caption=(f"Which future car wins? ⚡ {year} design battle: A ({na}) vs B ({nb}). "
