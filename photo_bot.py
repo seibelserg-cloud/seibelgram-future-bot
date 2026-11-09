@@ -72,13 +72,10 @@ LOCATIONS = [
     "purple-gray high-altitude gravel road in a dry mountain plateau, midday sun and crisp distant peaks",
 ]
 NO_OLD_LOOK = (
-    "Visually fresh editorial setting, not a luxury showroom or a generic automotive advertisement. "
-    "Absolutely NO sunset or sunrise, golden hour, warm-orange ambient lighting, marble pavilion, "
-    "curved glass architecture, designer villa, wet reflective polished floor, neon-lit cyberpunk "
-    "city, mountain resort, glossy metallic silver, gunmetal chrome, repeated sunset reflections. "
-    "The background is distinct and as important as the vehicle's bold silhouette."
+    "Absolutely NO sunset or sunrise, golden-hour lighting, wet reflective floor, marble-and-glass "
+    "pavilion, curved luxury villa, mountain resort, glossy metallic silver, champagne gold, "
+    "neon cyberpunk streets or repetitive architectural showroom. Different lighting and place."
 )
-
 VIEWS = [
     ("front_three_quarter", "low FRONT three-quarter camera, one complete side and entire nose visible"),
     ("true_side_profile", "STRICT true SIDE PROFILE, perpendicular 90-degree camera, entire silhouette from nose to tail"),
@@ -87,14 +84,11 @@ VIEWS = [
 ]
 
 CORE_STYLE = (
-    "Create a museum-grade radically new transportation sculpture, an unmistakable design leap beyond "
-    "ALL contemporary 2020s/2030s production cars. Unforgettable exterior massing and innovative silhouette "
-    "are FAR more important than headlights, surface graphics or LED stripes. This is NOT an SUV, "
-    "NOT a conventional sports coupe, NOT a facelift, NOT a recognizable brand or current road car. "
-    "Photorealistic premium industrial-design CGI, physically coherent surfaces and wheel placement, "
-    "4 distinct ground-touching tires on 2 axles, BOTH wheel arches clearly visible on near side, "
-    "nonhovering realistic chassis, physically believable paint, convincing natural or studio lighting, entirely visible "
-    "vehicle with space around its edges, ONE vehicle only."
+    "An unmistakable radical design leap beyond every present-day car. Not an SUV, sedan, "
+    "familiar sports coupe or modern production concept with LED trim. Prioritize startling "
+    "sculptural silhouette over decorative lights. Four true rubber tires on two aligned axles; "
+    "both near-side wheels visible, realistic ground contact and suspension, no hovering. "
+    "One complete car fully framed, sharp physically coherent high-end CGI, natural shadows."
 )
 CLEAN = (
     "NO manufacturer identity; completely BLANK nose, hood, body and wheel hubs. "
