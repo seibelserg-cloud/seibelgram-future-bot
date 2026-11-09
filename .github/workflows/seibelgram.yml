@@ -53,7 +53,7 @@ jobs:
           python -m pip install -r requirements.txt
           if ! command -v ffmpeg >/dev/null; then sudo apt-get update && sudo apt-get install -y ffmpeg; fi
       - name: Run safety tests
-        run: python -m unittest -v test_bot
+        run: python -m unittest -v test_bot test_photos test_quality_gate
       - name: Generate vertical MP4 preview
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
@@ -178,6 +178,11 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: python photo_bot.py
+      - name: Run free AI vision quality gate on new photos (NO publication)
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: python quality_gate.py photo_output/car-1.jpg photo_output/car-2.jpg --online --output photo_output/qa-report.json
       - name: Archive photos and captions for review
         if: success()
         uses: actions/upload-artifact@v4
