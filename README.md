@@ -42,3 +42,15 @@ The one-shot workflow published exactly one approved silver concept image as a v
 - **Public posting safety:** No unattended photo posts until we can avoid duplicates during Buffer's active TikTok photo issue and validate the AI gate. No paid subscriptions or required human daily work. A failed QA means *skip*, not *publish anyway*.
 - The two generated photos are **separate files, no collage or overlay**. Camera prompts now vary across front three-quarter, true side, rear three-quarter and head-on.
 - Quality gate tests: `python -m unittest -v test_quality_gate test_photos test_bot`.
+
+## FUTURE / IMPOSSIBLE launch — 2026-11-09
+
+The creative engine in `photo_bot.py` now uses **three extreme separate design directions**, replacing generic sedans, SUVs and coupes:
+
+- **MONOLITH:** a single cast-metal vehicle architecture, radical glass capsule, giant recessed wheels
+- **AERO BEAST:** a very long and low machine with enormous through-body air tunnels and fighter-style canopy
+- **SPACE LIMO:** an extreme ultra-luxury ground vessel with a very long panorama capsule, no traditional sedan shell
+
+Each prompt prioritizes unmistakable silhouette innovation over common LED facelift styling, and explicitly forbids text, badges, watermarks, brand marks, plates and collages. The video generator `bot.py` uses the same 3 directions. Photos are prepared as individual 1080×1920 portrait JPGs (with original image preserved in center); they are **not** actual new CAD camera angles and may still contain invented marks from the diffusion model.
+
+`python photo_bot.py --showcase` requests all **three** designs in one run for offline review; ordinary scheduled generation still makes 2 candidates per batch. GitHub Actions is configured for a single showcase run; AI image QA and visual human review occur before **any** public post. Automatic public TikTok posting stays disabled.
