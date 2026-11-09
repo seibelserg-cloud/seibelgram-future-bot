@@ -9,6 +9,7 @@ NEVER enable Workers Paid or silently downgrade model quality.
 import base64
 import io
 import os
+import time
 import requests
 from PIL import Image
 
@@ -27,8 +28,16 @@ def get_image(prompt,demo,index):
         raise ValueError("Image prompt empty or exceeds 2048 chars")
     url=f"https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{MODEL}"
     fields={"prompt":(None,prompt),"width":(None,"1024"),"height":(None,"1024")}
-    response=requests.post(url,files=fields,
-        headers={"Authorization":f"Bearer {token}"},timeout=180)
+    # A transient 5xx can be retried once for IMAGE GENERATION ONLY.
+    # Never retry Buffer/TikTok posting and never retry quota/permission errors.
+    response=None
+    for attempt in range(2):
+        response=requests.post(url,files=fields,
+            headers={"Authorization":f"Bearer {token}"},timeout=180)
+        if response.status_code in (500,502,503,504) and attempt == 0:
+            time.sleep(2)
+            continue
+        break
     if response.status_code==403:
         raise RuntimeError("FLUX2 model unavailable on Free plan. No paid plan enabled.")
     if response.status_code==429:
