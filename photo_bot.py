@@ -114,7 +114,7 @@ def run(day, slot, demo=False, showcase=False):
     manifest = {
         "day": day, "slot": slot, "creative_version": "FUTURE-IMPOSSIBLE-01",
         "showcase": showcase, "image_model": "@cf/black-forest-labs/flux-2-klein-9b",
-        "demo": demo, "images": [],
+        "demo": demo, "images": [], "generation_errors": [],
         "requires_visual_review": True,
         "approved_for_publication": False,
         "ai_generated": True,
@@ -125,9 +125,16 @@ def run(day, slot, demo=False, showcase=False):
         "platform": "tiktok", "published": False
     }
     for i, ((label, _), prompt) in enumerate(zip(themes, prompts), start=1):
-        im = get_image(prompt, demo, i-1).convert("RGB")
-        if im.width < 512 or im.height < 512:
-            raise RuntimeError("Generated photo too small")
+        try:
+            im = get_image(prompt, demo, i-1).convert("RGB")
+            if im.width < 512 or im.height < 512:
+                raise RuntimeError("Generated photo too small")
+        except Exception as exc:
+            # A temporary model failure must NEVER substitute another car or
+            # silently publish. Keep working on the remaining concepts.
+            manifest["generation_errors"].append({"concept":label,"error":type(exc).__name__})
+            print(f"Generation FAILED for {label}: {type(exc).__name__}. Not publishing.")
+            continue
         filename = f"car-{i}.jpg"
         im.save(OUT/filename, quality=94, optimize=True, subsampling=0)
         portrait_name = f"portrait-car-{i}.jpg"
@@ -137,8 +144,11 @@ def run(day, slot, demo=False, showcase=False):
             "concept": label, "prompt": prompt, "width": im.width, "height": im.height
         })
         print(f"Saved FUTURE / IMPOSSIBLE concept {i}: {label}, {im.width}x{im.height}")
+    manifest["generation_complete"]=(len(manifest["images"])==len(prompts))
     (OUT/"post.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Created {len(prompts)} radical concept photos + separate 9:16 portraits. NOTHING published.")
+    print(f"Created {len(manifest['images'])}/{len(prompts)} radical concepts; kept {len(manifest['generation_errors'])} failures for review. NOTHING published.")
+    if not manifest["images"]:
+        raise RuntimeError("No candidate image generated; inspect post.json, no publication.")
 
 def main():
     p = argparse.ArgumentParser()
