@@ -75,6 +75,20 @@ class PhotoTests(unittest.TestCase):
         self.assertNotIn(".text(",src)
         photo=Image.new("RGB",(1024,1024),(95,108,126))
         self.assertEqual(photo_bot.portrait_frame(photo).size,(1080,1920))
+    def test_partial_cloudflare_failure_keeps_remaining_photos(self):
+        with tempfile.TemporaryDirectory() as t:
+            with patch.object(photo_bot,"OUT",Path(t)):
+                with patch.object(photo_bot,"get_image",side_effect=[
+                    RuntimeError("temporary HTTP 500"),Image.new("RGB",(1024,1024),(60,80,100))
+                ]):
+                    photo_bot.run("2026-11-09",1,False)
+            import json
+            data=json.loads((Path(t)/"post.json").read_text())
+            self.assertEqual(len(data["generation_errors"]),1)
+            self.assertEqual(len(data["images"]),1)
+            self.assertFalse(data["generation_complete"])
+            self.assertFalse(data["approved_for_publication"])
+            self.assertTrue((Path(t)/"car-2.jpg").exists())
     def test_draft_payload_never_schedules_or_publishes(self):
         urls=["https://raw.githubusercontent.com/seibelserg-cloud/seibelgram-future-bot/main/photo-test/car-1.jpg"]
         payload=photo_draft.make_draft_payload("channel",urls)
