@@ -12,10 +12,34 @@ class PhotoTests(unittest.TestCase):
         a,p=photo_bot.prompts_for("2026-11-08",1)
         self.assertEqual(len(p),2)
         self.assertNotEqual(a[0][0],a[1][0])
+        self.assertEqual({name for name,_ in photo_bot.THEMES},{"MONOLITH","AERO BEAST","SPACE LIMO"})
         for prompt in p:
-            self.assertIn("no logos",prompt)
-            self.assertIn("no watermark",prompt)
-            self.assertIn("no text",prompt)
+            self.assertIn("no badges",prompt.lower())
+            self.assertIn("no watermark",prompt.lower())
+            self.assertIn("text",prompt.lower())
+            self.assertIn("not an suv",prompt.lower())
+            self.assertIn("design leap",prompt.lower())
+            self.assertLessEqual(len(prompt),2048)
+    def test_each_theme_emerges_and_no_repeat_in_batch(self):
+        seen=set()
+        for day in ("2026-11-09","2026-11-10","2026-11-11","2026-11-12"):
+            for slot in (1,2):
+                themes,prompts=photo_bot.prompts_for(day,slot)
+                labels=[x[0] for x in themes]
+                self.assertEqual(len(set(labels)),2)
+                self.assertEqual(len(prompts),2)
+                seen.update(labels)
+        self.assertEqual(seen,{"MONOLITH","AERO BEAST","SPACE LIMO"})
+    def test_photo_metadata_contains_new_creative_version(self):
+        with tempfile.TemporaryDirectory() as t:
+            with patch.object(photo_bot,"OUT",Path(t)),patch.object(photo_bot,"get_image",
+                    return_value=Image.new("RGB",(1024,1024),(40,80,120))):
+                photo_bot.run("2026-11-09",1,True)
+            import json
+            data=json.loads((Path(t)/"post.json").read_text())
+            self.assertEqual(data["creative_version"],"FUTURE-IMPOSSIBLE-01")
+            self.assertFalse(data["approved_for_publication"])
+            self.assertFalse(data["published"])
     def test_generate_is_review_only_and_no_typography(self):
         with tempfile.TemporaryDirectory() as t:
             with patch.object(photo_bot,"OUT",Path(t)), patch.object(photo_bot,"get_image",
