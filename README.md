@@ -86,3 +86,14 @@ The FLUX.2 candidate batch is reviewed by `quality_gate.py` and archived. The sc
 [Run 42542160170](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42542160170): Both real FLUX.2 Klein 9B images generated successfully using the **existing Cloudflare Free account**, and every offline test passed. The artifact `seibelgram-photo-preview` contains two independent originals, two vertical 1080×1920 versions, metadata and quality report. Automated vision **withheld both**: the MONOLITH candidate did not meet the conservative confidence requirements for complete single vehicle/geometry/pro quality; the SPACE LIMO candidate also had possible branding. Manual review found designs not yet at high enough editorial standard for publication. Therefore **zero new social posts**; unattended publishing remains disabled.
 
 The Free model experiment proved API compatibility but not automatic editorial-grade content. The strict gate is intentional. Separately created high-quality 9:16 concept artwork inside ChatGPT is an editorial benchmark, not a claim that unattended GitHub + Cloudflare will generate the same visuals.
+
+
+## Art direction V2 — color and environment rotation (2026-11-09)
+
+Owner rejected the repetitive **metallic cars under sunset beside curved luxury showrooms**. This aesthetic is now explicitly forbidden in both the photo and video prompts.
+
+- **12 nonmetallic colours**, rotating across orange, chartreuse, vermilion, ultramarine, lilac, sunflower yellow, turquoise, raspberry, terracotta, mint, cobalt violet and powder blue. A candidate pair uses two different finishes, and the rotation covers the full palette over time.
+- **12 distinct environments**, including white wind tunnel, bright salt flats, snowy wind farm, colourful freight yard, dry testing runway, volcanic gravel, pure blue cyclorama, palm-lined coastal road, aerospace hangar, wheat fields, public skatepark and high-altitude dry plateau.
+- Both images in a video use **different backgrounds**, not the same scenic gallery. Avoid sunset/sunrise, wet mirror floors, curved showroom architecture, chrome, gold/bronze, rainy neon city and luxury villas.
+- Production stays **review-only**, 2 daily candidate batches with visual QA and separate 1080×1920 photographs. Do not publish an unreviewed or failed image; the visual diffusion model is not guaranteed to honor all aesthetic instructions.
+
