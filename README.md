@@ -58,3 +58,9 @@ Each prompt prioritizes unmistakable silhouette innovation over common LED facel
 ### Showcase QA iteration 1
 
 Run [42540650445](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42540650445) generated three real AI concept photos and three 1080×1920 portraits. All passed code tests; automated visual QA declined all 3 for uncertain wheel/vehicle geometry and/or photo quality, so nothing was posted. This drove a second iteration: fixed front/rear axle and tire-ground-contact requirements and more informative front/side three-quarter views. The following showcase run tests those corrections.
+
+### Showcase QA iteration 2
+
+[Action 42540959213](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42540959213) ran all photo tests and generated three separate 1024×1024 concept photographs plus 1080×1920 previews; artifact **seibelgram-photo-preview** contains images and `qa-report.json`. All three were conservatively rejected by the AI visual QA (questionable geometry/typography/professional quality). On manual inspection MONOLITH became an enclosed wheelless pod, AERO BEAST had a small mark and ambiguous wheel/layout geometry, and SPACE LIMO still lacked credible wheel architecture. Therefore **do not auto-post these photos**; improve model fidelity and visual QA before any unattended release. The new creative prompts and workflow remain in the repo for further tests.
+
+Editorial benchmarks can be prepared separately, but generating a higher-quality image with an interactive image model does NOT mean the free Cloudflare generator has acquired that capability. Keep the unattended publishing safety lock in place.
