@@ -78,14 +78,14 @@ def portrait_frame(image):
     canvas.paste(art, ((1080-art.width)//2, (1920-art.height)//2))
     return canvas
 
-def prompts_for(day, slot):
+def prompts_for(day, slot, showcase=False):
     # Distinct silhouettes each slot, rotating 3 families. Different dates/slots diversify.
     rng = random.Random(f"SEIBELGRAM-IMPOSSIBLE-01:{day}:{slot}")
-    choices = rng.sample(THEMES, 2)
-    colors = rng.sample(PALETTES, 2)
-    locations = rng.sample(LOCATIONS, 2)
+    choices = list(THEMES) if showcase else rng.sample(THEMES, 2)
+    colors = rng.sample(PALETTES, len(choices))
+    locations = rng.sample(LOCATIONS, len(choices))
     base = (int(day.replace("-", "")) + slot*2) % len(VIEWS)
-    views = [VIEWS[base], VIEWS[(base+1) % len(VIEWS)]]
+    views = [VIEWS[(base+i) % len(VIEWS)] for i in range(len(choices))]
     prompts = []
     for (_, design), color, place, (_, view) in zip(choices, colors, locations, views):
         prompt = (
@@ -98,11 +98,12 @@ def prompts_for(day, slot):
         prompts.append(prompt)
     return choices, prompts
 
-def run(day, slot, demo=False):
-    themes, prompts = prompts_for(day, slot)
+def run(day, slot, demo=False, showcase=False):
+    themes, prompts = prompts_for(day, slot, showcase=showcase)
     OUT.mkdir(parents=True, exist_ok=True)
     manifest = {
         "day": day, "slot": slot, "creative_version": "FUTURE-IMPOSSIBLE-01",
+        "showcase": showcase,
         "demo": demo, "images": [],
         "requires_visual_review": True,
         "approved_for_publication": False,
@@ -127,15 +128,16 @@ def run(day, slot, demo=False):
         })
         print(f"Saved FUTURE / IMPOSSIBLE concept {i}: {label}, {im.width}x{im.height}")
     (OUT/"post.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    print("Created 2 radical concept photos + separate 9:16 portraits. NOTHING published.")
+    print(f"Created {len(prompts)} radical concept photos + separate 9:16 portraits. NOTHING published.")
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--day", default=dt.date.today().isoformat())
     p.add_argument("--slot", type=int, default=1, choices=[1, 2])
     p.add_argument("--demo", action="store_true")
+    p.add_argument("--showcase", action="store_true", help="Generate one separate still for each of 3 design families")
     args = p.parse_args()
-    run(args.day, args.slot, args.demo)
+    run(args.day, args.slot, args.demo, showcase=args.showcase)
 
 if __name__ == "__main__":
     main()
