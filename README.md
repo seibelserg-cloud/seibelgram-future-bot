@@ -106,3 +106,12 @@ Owner rejected the repetitive **metallic cars under sunset beside curved luxury 
 
 This confirms that the prompt rotation actually changes colors and locations. **It does NOT confirm good vehicle designs:** both candidates were rejected by the conservative visual AI filter for incomplete/incorrect vehicle geometry and other photo quality uncertainty. Manual visual inspection confirms toy/pod-like bodies that fail the editorial goal. **No posts sent.** Retain the rotation but further improve the model/vehicle form before any unattended TikTok posting. The two manually attempted alternative image edits also kept reverting to the familiar luxury-pavilion look and were discarded.
 
+
+## Confirmed second public post — November 9, 2026
+
+The owner asked to make a post that day. Cloudflare Workers AI Free returned its daily quota limit. A new **matte magenta radical concept GT on white salt flats** was generated using **7 existing Runway Free credits** (no payment or plan upgrade). The image was inspected as a single unbranded 9:16 portrait. A one-shot GitHub Actions flow [42637198097](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42637198097) downloaded that image, upscaled to **1080x1920**, committed it with a permanent duplicate-prevention reservation, and sent exactly one request to Buffer.
+
+Buffer returned post ID `6af1dbc2010fa6782143d2b5`, initial status `sending`. Subsequent **read-only GraphQL query** [42637632097](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions/runs/42637632097) confirmed **`status: sent`**, `sentAt: 2026-11-09T14:43:54.423Z`, and an actual TikTok destination:
+https://tiktok.com/@seibelgram/video/7706182049387777312
+
+**This second post is confirmed by Buffer as published.** If TikTok photo URLs redirect to /video/, use Buffer's returned official externalLink verbatim. No duplicate was attempted. The recurring autonomous posting switch remains OFF; two daily candidate-generation and QA schedules are present, but they do not publish.
