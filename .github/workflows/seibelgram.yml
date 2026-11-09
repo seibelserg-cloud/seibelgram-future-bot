@@ -471,3 +471,43 @@ jobs:
           name: seibelgram-nov9-single-candidate
           path: today_candidate/
           retention-days: 7
+
+  nov9_runway_stage_only:
+    if: github.event_name == 'push' && github.event.head_commit.message == 'Stage Nov9 Runway photo for review'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Pillow
+        run: python -m pip install -r requirements.txt
+      - name: Download one Runway-generated car image
+        env:
+          IMAGE_URL: https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3.1-flash-lite-image/images/b0ad68a2-1ed6-489b-a5cd-ef1ed9c053b8/de4cf84a-abf6-4a59-805b-4243316601fb/An_extraordinary_ORIGINAL_2060_futuristic_hypercar__extreme_.jpg?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNzNlYTNmZjI2MzFlOWEwMSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5NDM5NTYzNH0.G868QFCwqnBhvZz8wbKdz0bXUrwuAEzfOIAqT7lncZU
+        run: |
+          mkdir -p today_review
+          curl -fsSL --retry 1 --max-time 70 "$IMAGE_URL" -o today_review/car.jpg
+          python - <<'PY'
+          from PIL import Image
+          p="today_review/car.jpg"
+          with Image.open(p) as im:
+              im.verify()
+          with Image.open(p) as im:
+              print("Verified image", im.size,im.format)
+              assert im.width >= 480 and im.height >= 800
+              assert im.height > im.width
+          PY
+      - name: Review artifact ONLY - do not publish
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seibelgram-nov9-runway-editorial-review
+          path: today_review/
+          if-no-files-found: ignore
+          retention-days: 7
