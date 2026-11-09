@@ -41,19 +41,44 @@ THEMES = [
      "It MUST visibly roll on exactly four real rubber tires, two distinct wheels on the visible side, "
      "with realistic front and rear axles and ground contact, never hover or use duplicate wheel pairs.")
 ]
+# Deliberately NOT a catalog of chrome/silver cars at sunset.
+# Keep color and location diversified independently across days and slots.
 PALETTES = [
-    "brushed liquid platinum with obsidian glazing",
-    "deep petroleum blue iridescent titanium",
-    "warm oxidized bronze with graphite shadow surfaces",
-    "pearl-ceramic white with anthracite glass",
-    "satin dark chromium with subtle copper reflections",
-    "polished meteorite silver with smoked glass"
+    "solid matte signal orange, black glass, absolutely no metallic flakes",
+    "opaque acid-lime green ceramic paint with black graphite details",
+    "flat electric ultramarine blue paint, black ceramic canopy",
+    "saturated vermilion red matte enamel, dark smoky windows",
+    "solid pastel-lilac pearlescent-free finish, charcoal glass",
+    "vivid sunflower yellow smooth nonmetallic paint, ink-black glazing",
+    "matte turquoise with restrained off-white secondary pieces",
+    "deep solid raspberry-magenta enamel, black tires and glass",
+    "muted terracotta orange clay-ceramic paint, dark gray windows",
+    "opaque pale mint-green finish, graphite shadow details",
+    "matte cobalt-violet finish with absolutely no reflective chrome",
+    "powder-blue satin ceramic paint, cream accent surfaces",
 ]
 LOCATIONS = [
-    "vast minimal polished-concrete museum with sculptural light openings, dusk",
-    "monumental futuristic architecture of curving stone and deep shadow, sunrise",
-    "quiet high-end experimental automotive gallery, charcoal walls and soft luminous floor"
+    "empty white full-scale automotive wind tunnel, technical test lights and dry matte floor, neutral midday illumination",
+    "vast chalk-white salt flats under clean bright noon sunshine, hard shadows, empty horizon, no buildings",
+    "snow-covered Arctic wind-farm service road, pale winter morning, matte snow, clear blue daylight",
+    "industrial shipping-container yard in cloudy daytime, rows of colorful freight containers, dry asphalt",
+    "empty racing test runway with yellow road markings, overcast bright noon, grassy horizon, no buildings",
+    "red volcanic gravel field with distant black lava cliffs, hard midmorning natural light, dusty ground",
+    "color-blocked electric-blue photography cyclorama studio with hard frontal light, no architecture",
+    "dry tropical coastal highway with palms and a turquoise sea, clear bright morning, no buildings",
+    "fluorescent clean aerospace testing hangar with white modular walls, bright evenly diffused artificial lighting",
+    "autumn farmland concrete lane with golden wheat and wind turbines, low-cloud daytime, no sunset",
+    "large urban skatepark with colorful painted concrete ramps under bright noon daylight, no pavillion",
+    "purple-gray high-altitude gravel road in a dry mountain plateau, midday sun and crisp distant peaks",
 ]
+NO_OLD_LOOK = (
+    "Visually fresh editorial setting, not a luxury showroom or a generic automotive advertisement. "
+    "Absolutely NO sunset or sunrise, golden hour, warm-orange ambient lighting, marble pavilion, "
+    "curved glass architecture, designer villa, wet reflective polished floor, neon-lit cyberpunk "
+    "city, mountain resort, glossy metallic silver, gunmetal chrome, repeated sunset reflections. "
+    "The background is distinct and as important as the vehicle's bold silhouette."
+)
+
 VIEWS = [
     ("front_three_quarter", "low FRONT three-quarter camera, one complete side and entire nose visible"),
     ("true_side_profile", "STRICT true SIDE PROFILE, perpendicular 90-degree camera, entire silhouette from nose to tail"),
@@ -68,7 +93,7 @@ CORE_STYLE = (
     "NOT a conventional sports coupe, NOT a facelift, NOT a recognizable brand or current road car. "
     "Photorealistic premium industrial-design CGI, physically coherent surfaces and wheel placement, "
     "4 distinct ground-touching tires on 2 axles, BOTH wheel arches clearly visible on near side, "
-    "nonhovering realistic chassis, sophisticated reflections, rich architectural lighting, entirely visible "
+    "nonhovering realistic chassis, physically believable paint, convincing natural or studio lighting, entirely visible "
     "vehicle with space around its edges, ONE vehicle only."
 )
 CLEAN = (
@@ -87,10 +112,15 @@ def portrait_frame(image):
 
 def prompts_for(day, slot, showcase=False):
     # Distinct silhouettes each slot, rotating 3 families. Different dates/slots diversify.
-    rng = random.Random(f"SEIBELGRAM-IMPOSSIBLE-01:{day}:{slot}")
+    rng = random.Random(f"SEIBELGRAM-VARIETY-02:{day}:{slot}")
     choices = list(THEMES) if showcase else rng.sample(THEMES, 2)
-    colors = rng.sample(PALETTES, len(choices))
-    locations = rng.sample(LOCATIONS, len(choices))
+    # Deterministically rotate ALL 12 color/scene combinations before repeating.
+    # Slots alternate between distant palette/setting indices, never same batch duplicates.
+    ordinal = dt.date.fromisoformat(day).toordinal()
+    base_color = (ordinal * 2 + slot - 1) % len(PALETTES)
+    base_scene = (ordinal * 5 + (slot-1)*2) % len(LOCATIONS)
+    colors = [PALETTES[(base_color + 5*i) % len(PALETTES)] for i in range(len(choices))]
+    locations = [LOCATIONS[(base_scene + 5*i) % len(LOCATIONS)] for i in range(len(choices))]
     base = (int(day.replace("-", "")) + slot*2) % len(VIEWS)
     # Fixed three-quarter / full side views expose axle geometry during showcase review.
     views = [VIEWS[0], VIEWS[2], VIEWS[1]] if showcase else [
@@ -100,7 +130,7 @@ def prompts_for(day, slot, showcase=False):
     for (_, design), color, place, (_, view) in zip(choices, colors, locations, views):
         prompt = (
             f"{design} Finish: {color}. Location: {place}. Camera: {view}. "
-            f"{CORE_STYLE} {CLEAN}"
+            f"{CORE_STYLE} {CLEAN} {NO_OLD_LOOK}"
         )
         # The currently used Flux endpoint in bot.py caps outgoing prompt at 2048 chars.
         if len(prompt) > 2048:
@@ -112,7 +142,7 @@ def run(day, slot, demo=False, showcase=False):
     themes, prompts = prompts_for(day, slot, showcase=showcase)
     OUT.mkdir(parents=True, exist_ok=True)
     manifest = {
-        "day": day, "slot": slot, "creative_version": "FUTURE-IMPOSSIBLE-01",
+        "day": day, "slot": slot, "creative_version": "FUTURE-VARIETY-02",
         "showcase": showcase, "image_model": "@cf/black-forest-labs/flux-2-klein-9b",
         "demo": demo, "images": [], "generation_errors": [],
         "requires_visual_review": True,
