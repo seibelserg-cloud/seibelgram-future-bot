@@ -22,18 +22,40 @@ CARS=[
  ("AERO BEAST","unprecedented very low, very long extreme hypercar with vast engineered aerodynamic tunnels passing through the main body, twin load-bearing flying buttresses, fighter-jet style canopy, and a long sharp tapered tail, four believable wheels"),
  ("SPACE LIMO","extraordinary elongated luxury ground vessel, breathtaking panoramic teardrop glass passenger capsule, sculptural floating continuous hull, four partly recessed enormous wheels, radical 2058 proportions unlike any familiar executive sedan")
 ]
-COLORS=["liquid chrome","champagne titanium","deep emerald metallic","graphite silver","pearl white","cobalt blue","warm bronze metallic"]
-PLACES=["a monumental polished-concrete architectural studio","a coastal modernist pavilion at dusk","a minimalist glass-and-steel automotive design museum","a white futuristic design laboratory"]
+COLORS=[
+ "solid matte signal orange","opaque electric lime-green","satin ultramarine blue",
+ "flat vermilion red","pastel-lilac ceramic","bright sunflower yellow",
+ "solid turquoise","raspberry-magenta matte","burnt terracotta enamel",
+ "pale mint ceramic","matte cobalt violet","powder-blue satin"
+]
+PLACES=[
+ "bright white automotive wind tunnel with a dry industrial floor at noon",
+ "empty sunlit white salt flats under a clean blue sky",
+ "a snow-covered Arctic wind-farm service road in crisp daylight",
+ "an overcast freight-container yard with colorful shipping containers",
+ "a deserted dry motorsport test runway under high noon sun",
+ "a red volcanic gravel plateau in hazy daylight",
+ "a pure electric-blue high-key photography cyclorama studio",
+ "a dry tropical palm-lined coastal highway in bright morning light",
+ "a pristine fluorescent aerospace testing hangar",
+ "an open autumn farming road among yellow wheat and wind turbines",
+ "a daytime skatepark with painted colored concrete ramps",
+ "a stark high-altitude mountain gravel pass under cloud-filtered sunlight"
+]
 
 def concept(day, slot):
     rng=random.Random(f"SEIBELGRAM-03:{day}:{slot}")
     (na,sa),(nb,sb)=rng.sample(CARS,2)
-    ca,cb=rng.sample(COLORS,2)
-    place=rng.choice(PLACES)
+    # Rotate two distinct colors AND two distinct scenes in every video.
+    day_index=dt.date.fromisoformat(day).toordinal()
+    base_color=(day_index*2+slot-1)%len(COLORS)
+    base_scene=(day_index*5+slot-1)%len(PLACES)
+    ca,cb=COLORS[base_color],COLORS[(base_color+5)%len(COLORS)]
+    pa,pb=PLACES[base_scene],PLACES[(base_scene+5)%len(PLACES)]
     year=rng.randint(2040,2065)
-    def prompt(subject,color):
+    def prompt(subject,color,place):
         return (f"Photorealistic high-end automotive CGI photograph of ONE original concept car for year {year}: "
-                f"{subject}, {color} paint. Located in {place}. Full car visible from a low front 3/4 angle, "
+                f"{subject}, {color} NONMETALLIC paint. Located in {place}. Full car visible from a low front 3/4 angle, "
                 "four believable rubber tires, crisp natural cinematic studio lighting, coherent headlights, "
                 "realistic reflections, daring futuristic industrial design, premium magazine composition. "
                 "The entire hood, front grille, nose, bumper, wheel hubs and body panels are completely unbranded and blank. "
@@ -41,9 +63,9 @@ def concept(day, slot):
                 "NO lettering, NO signage, NO text, NO license plate, NO watermark, NO identifiable brand marks anywhere. "
                 "Original experimental impossible-looking design from a far future, unlike ANY current production car. "
                 "Avoid contemporary SUV, ordinary sedan, traditional sports coupe, familiar grille, standard doorhandles. "
-                "Unforgettable radical silhouette, not merely modern LED strips. No people, no collage, no distorted wheels.")
+                "Unforgettable radical silhouette, not merely modern LED strips. NO sunset, marble pavilion, wet polished reflecting floors, golden-hour glow, neon nighttime megacity, gunmetal chrome, duplicate luxury gallery. No people, no collage, no distorted wheels.")
     return dict(title=f"FUTURE / IMPOSSIBLE {year}: A vs B",date=day,slot=slot,
-                prompts=[prompt(sa,ca),prompt(sb,cb)],
+                prompts=[prompt(sa,ca,pa),prompt(sb,cb,pb)],
                 labels=[na,nb],
                 caption=(f"Which future car wins? ⚡ {year} design battle: A ({na}) vs B ({nb}). "
                          "Comment A or B 👇\n\n#FutureCars #ConceptCars #CarDesign #Seibelgram #AIArt\n"
