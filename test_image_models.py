@@ -31,7 +31,8 @@ class Flux2BackendTest(unittest.TestCase):
         args,kwargs=post.call_args
         self.assertEqual(kwargs["files"]["width"],(None,"1024"))
         self.assertEqual(kwargs["files"]["height"],(None,"1024"))
-        self.assertIn("multipart",repr(kwargs["files"]) or "multipart") if False else None
+        self.assertEqual(kwargs["files"]["prompt"],(None,"a radical car with 4 wheels"))
+        self.assertNotIn("Content-Type",kwargs["headers"])
         self.assertNotIn("json",kwargs)
         self.assertTrue(args[0].endswith("flux-2-klein-9b"))
 
