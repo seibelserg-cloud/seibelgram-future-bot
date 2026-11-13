@@ -1,0 +1,38 @@
+name: SEIBELGRAM — TikTok delivery audit
+
+on:
+  schedule:
+    # After 19:00 Berlin publication (18:35 UTC = 19:35 CET / 20:35 CEST)
+    # Status goes to the ChatGPT monitor before the nightly 21:30 check.
+    - cron: '35 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  delivery_audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Test read-only Buffer delivery audit
+        run: python -m unittest -v test_buffer_delivery_audit
+      - name: Check final Buffer sent/error status for current Berlin date
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: |
+          DAY="$(TZ=Europe/Berlin date +%F)"
+          python buffer_delivery_audit.py --day "$DAY"
+      - name: Preserve final status and verified TikTok link, if available
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seibelgram-tiktok-delivery-audit
+          path: delivery_audit/delivery-audit.json
+          if-no-files-found: ignore
+          retention-days: 14

@@ -380,7 +380,7 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install -r requirements.txt
       - name: Safety and auto-publishing regression tests (offline)
-        run: python -m unittest -v test_auto_publish test_bot test_photos test_quality_gate test_image_models
+        run: python -m unittest -v test_auto_publish test_bot test_photos test_quality_gate test_image_models test_buffer_delivery_audit
 
       - name: Encode real 9-second test MP4 with original sound, no social API call
         run: |
