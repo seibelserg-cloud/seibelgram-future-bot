@@ -78,7 +78,9 @@ def accepted_candidates(day, slot):
         raise RuntimeError("AI images belong to a different day or publishing slot")
     if manifest.get("demo") is not False or manifest.get("published") is not False:
         raise RuntimeError("Demo or already-published images are prohibited")
-    if manifest.get("generation_errors") or not manifest.get("generation_complete"):
+    # A failed second generation must not discard a different, independently
+    # QA-approved first image. Only actually generated files may be selected.
+    if not isinstance(manifest.get("images"), list) or not manifest["images"]:
         return []
     if manifest.get("approved_for_publication") is not False:
         raise RuntimeError("The preview manifest unexpectedly claims publication approval")

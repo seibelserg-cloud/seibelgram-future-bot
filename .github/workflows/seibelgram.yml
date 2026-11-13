@@ -425,7 +425,7 @@ jobs:
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-        run: python quality_gate.py photo_output/car-1.jpg photo_output/car-2.jpg --online --output photo_output/qa-report.json
+        run: python quality_gate.py photo_output/car-*.jpg --online --output photo_output/qa-report.json
       - name: Archive candidate images and QA report; NOT published
         if: always()
         uses: actions/upload-artifact@v4
