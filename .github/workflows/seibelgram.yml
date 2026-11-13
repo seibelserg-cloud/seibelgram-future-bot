@@ -393,7 +393,7 @@ jobs:
           test "$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of default=nk=1:nw=1 /tmp/auto-publish-smoke.mp4)" = "720"
 
   daily_candidate_qa:
-    # Two daily attempts: publish only if independently passed strict online image QA.
+    # Two daily generation attempts; first valid image proceeds without AI visual QA.
     # Media and immutable per-slot reservation must be pushed before contacting Buffer.
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
@@ -420,8 +420,8 @@ jobs:
           python-version: '3.11'
       - name: Install
         run: python -m pip install -r requirements.txt
-      - name: Run quality safety tests
-        run: python -m unittest -v test_quality_gate test_photos test_image_models
+      - name: Run generator and media-integrity tests
+        run: python -m unittest -v test_photos test_image_models test_auto_publish
       - name: Generate separate image candidates
         if: steps.daily_cap.outputs.should_generate == 'yes'
         env:
@@ -433,21 +433,15 @@ jobs:
           SLOT=1
           if [ "$CRON_EXPRESSION" = '7 15 * * *' ]; then SLOT=2; fi
           python photo_bot.py --slot "$SLOT"
-      - name: Run real visual QA, check branding, originality and duplicate images
-        if: steps.daily_cap.outputs.should_generate == 'yes'
-        env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-        run: python quality_gate.py photo_output/car-*.jpg --online --output photo_output/qa-report.json
-      - name: Archive candidate images and QA report; NOT published
+      - name: Archive generated image candidates and manifest
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: seibelgram-daily-qa-candidates
+          name: seibelgram-daily-image-candidates
           path: photo_output/
           if-no-files-found: ignore
           retention-days: 7
-      - name: Prepare ONE original-sound 9:16 MP4 only when online QA approves
+      - name: Prepare ONE original-sound 9:16 MP4 from valid generated image
         if: steps.daily_cap.outputs.should_generate == 'yes'
         run: |
           set -eu
@@ -459,7 +453,7 @@ jobs:
       - name: Persist MP4 and immutable slot reservation BEFORE any Buffer request
         run: |
           set -eu
-          if [ ! -f photo_output/auto-ready.json ]; then echo "Strict QA rejected candidates; skip safely"; exit 0; fi
+          if [ ! -f photo_output/auto-ready.json ]; then echo "No valid generated image; skip safely"; exit 0; fi
           DAY="$(date -u +%F)"
           SLOT=1
           if [ "${{ github.event.schedule }}" = "7 15 * * *" ]; then SLOT=2; fi
@@ -475,7 +469,7 @@ jobs:
           SEIBELGRAM_ENABLE_POSTING: "yes"
         run: |
           set -eu
-          if [ ! -f photo_output/auto-ready.json ]; then echo "No video passed visual QA"; exit 0; fi
+          if [ ! -f photo_output/auto-ready.json ]; then echo "No video prepared"; exit 0; fi
           DAY="$(date -u +%F)"
           SLOT=1
           if [ "${{ github.event.schedule }}" = "7 15 * * *" ]; then SLOT=2; fi

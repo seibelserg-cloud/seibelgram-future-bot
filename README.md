@@ -1,35 +1,51 @@
 # SEIBELGRAM | FUTURE CARS
 
-## Current rollout — 13 November 2026
+## Active rollout — 13 November 2026: publish-first mode
 
-The CI-tested autonomous pipeline now has **two candidate-generation attempts with no more than ONE public TikTok post per day**.
-It must NEVER upload an unapproved design. The target Buffer publication times are
-**12:30 and 19:00 Europe/Berlin**, calculated with the correct summer/winter
-time-zone offset. GitHub generates candidates ahead of those times.
+**User-selected policy: publish automatically without mandatory AI visual QA.**
+The scheduled pipeline no longer calls Cloudflare Clef or blocks publication for
+subjective assessments of image beauty, car geometry, futuristic originality,
+logos, badges, or other image aesthetics. The image-generation prompts still
+request futuristic, brand-free concepts, but the generated result is not
+visually certified.
 
-The morning run attempts to prepare a post at 12:30 Berlin. If and only if no prior slot was reserved, the evening 19:00 Berlin run provides a second chance. The system generates two FLUX.2 [klein] 9B candidates per attempt, runs conservative
-technical and independent Cloudflare Clef visual checks, and selects **no more than
-one genuinely approved** image. When no image passes, the correct outcome is
-**zero posts**, not a forced upload. If one passes, the bot creates a nine-second
-720x1280 H.264/AAC MP4 with an original synthesized soundtrack and no on-screen
-text. The source photo, finished MP4 and unique immutable slot reservation are
-pushed to GitHub **before** a single Buffer API request. All publication attempts
-use TikTok's AI-generated disclosure metadata. On uncertain API responses the
-system does not retry. GitHub receipts distinguish Buffer *acceptance* from
-confirmed TikTok delivery.
+The system generates two photos per attempt using Cloudflare Workers AI Free
+and publishes **at most ONE TikTok video per Berlin calendar day**. The first
+slot targets **12:30 Europe/Berlin**. Only if it did not reserve a post may the
+second attempt target **19:00 Europe/Berlin**. The GitHub cron starts generation
+ahead of the Buffer publishing time. GitHub Actions schedules can be delayed.
 
-**Quality ceiling is unresolved:** a real two-image generation test on
-13 November did not pass editorial QA: one image looked much like a contemporary
-sports coupe and the other did not conclusively meet geometry/quality checks.
-The free image model can continue producing zero eligible posts. Do not weaken QA
-merely to obtain a stated daily posting quantity. No paid tier is enabled.
+The first **technically valid** generated JPEG is selected without vision review.
+The remaining automatic checks only reject missing/corrupt files, undersized
+photos, improperly formatted portrait frames, and *exact copies* of a source
+previously used in a reserved post. If image generation fails entirely, there
+is no fabricated placeholder or forced duplicate. The source JPEG is retained
+for exact-repeat detection.
 
-Status and media: [GitHub Actions](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions),
-artifacts `seibelgram-daily-qa-candidates` and `seibelgram-auto-post-status`.
-If the morning slot has a reservation, the evening run cannot schedule a second post even after an unknown Buffer outcome. The committed `content/YYYY-MM-DD/slot-N/reservation.json` file is the durable
-duplicate guard. Any attempted Buffer request writes `buffer-receipt.json`, including unconfirmed outcomes; only `BUFFER_ACCEPTED` confirms Buffer accepted a scheduled request.
-All previous single-shot public test locks remain valid.
+The selected 9:16 image is turned into an original-sound nine-second H.264/AAC
+MP4 without on-screen typography. A unique GitHub reservation, the source
+photo, and MP4 are committed before exactly one Buffer GraphQL scheduling
+attempt. AI-generated disclosure stays enabled. An unknown Buffer response
+must never automatically retry, avoiding duplicate TikTok posts.
 
+GitHub artifacts:
+`seibelgram-daily-image-candidates`, `seibelgram-auto-post-status`,
+`seibelgram-tiktok-delivery-audit`. Buffer accepting a scheduled post
+(`BUFFER_ACCEPTED`) is NOT proof that TikTok published it: the separate
+read-only `delivery-audit.yml` reports `sent`, `error` or `scheduled`
+when the provider exposes the status. The ChatGPT daily monitoring task
+checks for actual publication or failures.
+
+This choice prioritizes posting frequency over visual quality. Free-tier
+Cloudflare quotas, server errors, GitHub schedule delays, and Buffer delivery
+errors can still cause skipped posts. **No paid plan is enabled.**
+
+### Historical development notes below
+
+The original vision-QA requirements, visual approval gates and descriptions of
+publication as "disabled" in the older November 8–9 log are superseded by the
+active publish-first policy above; they describe past experiments, not current
+scheduled operation.
 
 Free-first AI concept channel bot for **@seibelgram** — isolated from APP24K/FLOW24K.
 
