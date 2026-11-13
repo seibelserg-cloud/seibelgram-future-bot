@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""SEIBELGRAM autonomous TikTok delivery, fail-closed and one attempt per slot.
+"""SEIBELGRAM autonomous TikTok delivery, one post per day at most.
 
-A successful AI image QA does NOT by itself publish. The video and an immutable
-reservation are committed and pushed BEFORE a single Buffer createPost request.
-An unknown Buffer response must never trigger an automatic second attempt.
+Post a generated valid concept image without subjective AI visual screening.
+Preserve basic media integrity, exact-repeat prevention, original AI disclosure,
+and the immutable reservation committed BEFORE a single Buffer request.
+Unknown Buffer outcomes must never trigger a second post attempt.
 """
 import argparse
 import datetime as dt
@@ -23,7 +24,6 @@ from reel_from_photo import build as build_reel
 
 OUTPUT = Path("photo_output")
 ARCHIVE = Path("content")
-EXPECTED_MODEL = "@cf/cloudflare/clef"
 HOST = "https://raw.githubusercontent.com/seibelserg-cloud/seibelgram-future-bot/main/"
 STYLES = ("neon-pulse", "deep-motion", "glacier-drive")
 
@@ -72,51 +72,58 @@ def save_status(state, reason, **details):
 
 
 def accepted_candidates(day, slot):
+    """Select the first valid, non-repeated generated image. No AI visual QA.
+
+    The user explicitly opted out of subjective checks for beauty, novelty,
+    logos or car geometry. Only corruption, broken format and exact reuse
+    of an already reserved source file can prevent scheduling.
+    """
     manifest = json.loads((OUTPUT / "post.json").read_text(encoding="utf8"))
-    report = json.loads((OUTPUT / "qa-report.json").read_text(encoding="utf8"))
     if manifest.get("day") != day or manifest.get("slot") != slot:
         raise RuntimeError("AI images belong to a different day or publishing slot")
     if manifest.get("demo") is not False or manifest.get("published") is not False:
         raise RuntimeError("Demo or already-published images are prohibited")
-    # A failed second generation must not discard a different, independently
-    # QA-approved first image. Only actually generated files may be selected.
-    if not isinstance(manifest.get("images"), list) or not manifest["images"]:
-        return []
-    if manifest.get("approved_for_publication") is not False:
-        raise RuntimeError("The preview manifest unexpectedly claims publication approval")
-    if report.get("schema_version") != 1 or report.get("model") != EXPECTED_MODEL:
-        raise RuntimeError("Online AI visual QA report missing or mismatched")
-    if len(report.get("items", [])) != len(manifest.get("images", [])):
-        raise RuntimeError("Mismatch between visual QA and generated images")
-    if report.get("automatically_published") is not False:
-        raise RuntimeError("Unexpected preexisting publication state")
+    if not isinstance(manifest.get("images"), list):
+        raise RuntimeError("Missing generated-image manifest list")
+
+    previously_used = {
+        sha256(p) for p in ARCHIVE.rglob("approved-source.jpg") if p.is_file()
+    }
     eligible = []
     for image in manifest["images"]:
-        source = OUTPUT / image["file"]
-        matches = [x for x in report["items"] if x.get("file") == str(source)]
-        if len(matches) != 1:
-            raise RuntimeError("Missing or duplicated QA assessment for " + str(source))
-        item = matches[0]
-        vision = item.get("vision", {})
-        if not (
-            item.get("passed") is True
-            and item.get("approved_for_publication") is True
-            and vision.get("passed") is True
-            and not item.get("reasons")
-            and not vision.get("reasons")
-        ):
+        if not isinstance(image, dict):
             continue
-        portrait = OUTPUT / image["portrait_file"]
+        filename = image.get("file")
+        portrait_filename = image.get("portrait_file")
+        if (not isinstance(filename, str) or Path(filename).name != filename
+                or not isinstance(portrait_filename, str)
+                or Path(portrait_filename).name != portrait_filename):
+            continue
+        source = OUTPUT / filename
+        portrait = OUTPUT / portrait_filename
         if not source.is_file() or not portrait.is_file():
-            raise RuntimeError("Approved media file is missing")
-        with Image.open(portrait) as im:
-            im.verify()
-        with Image.open(portrait) as im:
-            if im.size != (1080, 1920):
-                raise RuntimeError("Approved portrait is not 1080x1920")
+            continue
+        if source.stat().st_size < 10_000:
+            continue
+        try:
+            with Image.open(source) as im:
+                im.verify()
+            with Image.open(source) as im:
+                if min(im.size) < 512:
+                    continue
+            with Image.open(portrait) as im:
+                im.verify()
+            with Image.open(portrait) as im:
+                if im.size != (1080, 1920):
+                    continue
+        except (OSError, ValueError):
+            continue
+        digest = sha256(source)
+        if digest in previously_used:
+            continue
         eligible.append((image, source, portrait))
+        previously_used.add(digest)
     return eligible
-
 
 def prepare(day, slot):
     folder = directory(day, slot)
@@ -135,11 +142,10 @@ def prepare(day, slot):
         return save_status("skipped", "too_late_to_schedule_safely")
     eligible = accepted_candidates(day, slot)
     if not eligible:
-        return save_status("skipped", "no_candidate_passed_strict_online_qa")
+        return save_status("skipped", "no_valid_nonduplicate_image_generated")
     image, source, portrait = eligible[0]  # At most one video per slot
     folder.mkdir(parents=True, exist_ok=False)
-    # Keep the approved *source* photo in git for future perceptual duplicate checks.
-    # Archiving only the MP4 would silently disable the existing JPEG archive QA.
+    # Keep the generated source image to prevent exact repeat posts.
     shutil.copyfile(source, folder / "approved-source.jpg")
     media = folder / "future-reel.mp4"
     style = STYLES[(dt.date.fromisoformat(day).toordinal() + slot) % len(STYLES)]
@@ -163,7 +169,7 @@ def prepare(day, slot):
         "scheduled_for_utc": due_at.isoformat(),
         "ai_generated": True,
         "original_synth_audio": True,
-        "qa_model": EXPECTED_MODEL,
+        "visual_qa_required": False,
     }
     (folder / "reservation.json").write_text(
         json.dumps(claim, indent=2, ensure_ascii=False), encoding="utf8"
@@ -172,7 +178,7 @@ def prepare(day, slot):
         json.dumps({"folder": str(folder), "slot": slot, "day": day}, indent=2),
         encoding="utf8",
     )
-    return save_status("ready", "qa_approved_video_encoded_and_reserved",
+    return save_status("ready", "valid_generated_video_encoded_and_reserved",
                        folder=str(folder), due_at=due_at.isoformat())
 
 
