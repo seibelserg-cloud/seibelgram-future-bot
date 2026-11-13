@@ -83,6 +83,8 @@ class SafeAutoPublishTests(unittest.TestCase):
         self.assertEqual(duplicate["reason"], "slot_already_reserved")
         claim = json.loads((folder / "reservation.json").read_text())
         self.assertEqual(claim["video_sha256"], ap.sha256(folder / "future-reel.mp4"))
+        self.assertEqual(claim["source_image_sha256"], ap.sha256(folder / "approved-source.jpg"))
+        self.assertTrue((folder / "approved-source.jpg").is_file())
         self.assertTrue(claim["automatic_retries"] is False)
         self.assertEqual(claim["channel"], "tiktok/@seibelgram")
 
