@@ -1,5 +1,6 @@
 """Offline delivery-audit safety tests. No network traffic and NO Buffer mutations."""
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +11,9 @@ import buffer_delivery_audit as audit
 
 class DeliveryAuditTests(unittest.TestCase):
     def setUp(self):
+        self.env = patch.dict(os.environ, {"BUFFER_API_KEY": "offline-mock-token"})
+        self.env.start()
+        self.addCleanup(self.env.stop)
         self.t = tempfile.TemporaryDirectory()
         self.root = Path(self.t.name)
         self.today = "2026-11-14"
