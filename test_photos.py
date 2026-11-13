@@ -37,7 +37,7 @@ class PhotoTests(unittest.TestCase):
                 photo_bot.run("2026-11-09",1,True)
             import json
             data=json.loads((Path(t)/"post.json").read_text())
-            self.assertEqual(data["creative_version"],"FUTURE-VARIETY-02")
+            self.assertEqual(data["creative_version"],"FUTURE-VARIETY-03")
             self.assertFalse(data["approved_for_publication"])
             self.assertFalse(data["published"])
     def test_diverse_colours_and_scenes_not_repeated_in_daily_batch(self):
