@@ -68,6 +68,16 @@ class SafeAutoPublishTests(unittest.TestCase):
         self.assertFalse(ap.directory(self.DAY, self.SLOT).exists())
         render.assert_not_called()
 
+    def test_one_approved_candidate_survives_other_generation_failure(self):
+        manifest = json.loads((ap.OUTPUT / "post.json").read_text())
+        manifest["generation_complete"] = False
+        manifest["generation_errors"] = [{"concept": "SPACE LIMO", "error": "RuntimeError"}]
+        (ap.OUTPUT / "post.json").write_text(json.dumps(manifest))
+        with patch.object(ap, "build_reel", side_effect=self.fake_encode):
+            result = ap.prepare(self.DAY, self.SLOT)
+        self.assertEqual(result["state"], "ready")
+        self.assertTrue((ap.directory(self.DAY, self.SLOT) / "reservation.json").exists())
+
     def test_bad_or_missing_online_qa_cannot_be_reserved(self):
         self.report["model"] = None
         self.write_report()
