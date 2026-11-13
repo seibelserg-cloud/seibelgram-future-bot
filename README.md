@@ -2,12 +2,12 @@
 
 ## Current rollout — 13 November 2026
 
-The CI-tested autonomous pipeline now has **two candidate-generation and publication-attempt slots**.
+The CI-tested autonomous pipeline now has **two candidate-generation attempts with no more than ONE public TikTok post per day**.
 It must NEVER upload an unapproved design. The target Buffer publication times are
 **12:30 and 19:00 Europe/Berlin**, calculated with the correct summer/winter
 time-zone offset. GitHub generates candidates ahead of those times.
 
-The system generates two FLUX.2 [klein] 9B candidates per slot, runs conservative
+The morning run attempts to prepare a post at 12:30 Berlin. If and only if no prior slot was reserved, the evening 19:00 Berlin run provides a second chance. The system generates two FLUX.2 [klein] 9B candidates per attempt, runs conservative
 technical and independent Cloudflare Clef visual checks, and selects **no more than
 one genuinely approved** image. When no image passes, the correct outcome is
 **zero posts**, not a forced upload. If one passes, the bot creates a nine-second
@@ -26,7 +26,7 @@ merely to obtain a stated daily posting quantity. No paid tier is enabled.
 
 Status and media: [GitHub Actions](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions),
 artifacts `seibelgram-daily-qa-candidates` and `seibelgram-auto-post-status`.
-The committed `content/YYYY-MM-DD/slot-N/reservation.json` file is the durable
+If the morning slot has a reservation, the evening run cannot schedule a second post even after an unknown Buffer outcome. The committed `content/YYYY-MM-DD/slot-N/reservation.json` file is the durable
 duplicate guard. Any attempted Buffer request writes `buffer-receipt.json`, including unconfirmed outcomes; only `BUFFER_ACCEPTED` confirms Buffer accepted a scheduled request.
 All previous single-shot public test locks remain valid.
 

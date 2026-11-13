@@ -403,6 +403,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Check one-post daily cap before using Cloudflare Free quota
+        id: daily_cap
+        run: |
+          set -eu
+          DAY="$(date -u +%F)"
+          if [ "${{ github.event.schedule }}" = "7 15 * * *" ] && [ -f "content/$DAY/slot-1/reservation.json" ]; then
+            echo "should_generate=no" >> "$GITHUB_OUTPUT"
+            echo "Morning video already reserved; skip Cloudflare generation and Buffer"
+          else
+            echo "should_generate=yes" >> "$GITHUB_OUTPUT"
+          fi
       - name: Python
         uses: actions/setup-python@v5
         with:
@@ -412,6 +423,7 @@ jobs:
       - name: Run quality safety tests
         run: python -m unittest -v test_quality_gate test_photos test_image_models
       - name: Generate separate image candidates
+        if: steps.daily_cap.outputs.should_generate == 'yes'
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -422,6 +434,7 @@ jobs:
           if [ "$CRON_EXPRESSION" = '7 15 * * *' ]; then SLOT=2; fi
           python photo_bot.py --slot "$SLOT"
       - name: Run real visual QA, check branding, originality and duplicate images
+        if: steps.daily_cap.outputs.should_generate == 'yes'
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -435,6 +448,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - name: Prepare ONE original-sound 9:16 MP4 only when online QA approves
+        if: steps.daily_cap.outputs.should_generate == 'yes'
         run: |
           set -eu
           DAY="$(date -u +%F)"
