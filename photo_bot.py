@@ -17,27 +17,30 @@ OUT = Path("photo_output")
 # Internal labels are only for metadata/captions; NEVER render labels in artwork.
 THEMES = [
     ("MONOLITH",
-     "A revolutionary full-size five-meter-long, ultra-low four-wheeled concept GT with the proportions "
-     "of an exotic flagship sports car, not a tiny pod. One continuous angular ceramic shell, long "
-     "flattened nose, sharply stretched rear deck, wide ground-hugging chassis and a narrow swept-back "
-     "black glass roof. Two deep negative-space side channels cut THROUGH its sculpted bodywork. "
-     "Four large REAL wheels mounted in integrated wheel arches on two conventional axles. "
-     "The front and rear side wheels remain separated and clearly visible. Absolutely NOT a rounded "
-     "egg-shaped pod, open-wheel buggy, robotaxi, three-wheeler, toy car, or levitating capsule."),
+     "An editorial photograph of a full-size 2070 experimental grand touring coupe, "
+     "five meters long, very wide and extremely low. Its unbroken wedge-shaped sculpted "
+     "body forms an architectural faceted ceramic shell. A long low front hood and a "
+     "stretched rear deck frame a narrow windshield and a beautifully engineered canopy. "
+     "The front wheel is plainly visible inside its own front wheel arch, and the rear "
+     "wheel inside its separate rear wheel arch, with the rubber tires firmly on the ground. "
+     "All four wheels are mechanically plausible; the near-side pair is visually distinct. "
+     "The car has unusual open aerodynamic side channels and a breathtaking silhouette."),
     ("AERO BEAST",
-     "A wildly original full-size 2060 ultra-low track hypercar, dramatically wider than tall, "
-     "with front and rear rubber tires enclosed INSIDE four oversized integrated fenders. "
-     "An extremely long fighter-jet-like roofline, hollow structural aero tunnels, twin sweeping "
-     "flying buttresses, dramatic flared front fenders and an elegant tapering tail. "
-     "Radical physically possible silhouette unlike a roadgoing sports car. EXACTLY four wheels "
-     "on two axles, resting on the ground, no extra or disconnected wheels. NOT a miniature buggy."),
+     "A high-end automotive design photograph of an enormous 2060 experimental hypercar "
+     "with an exceptionally long, flat aerodynamic nose, a low double-bubble glass roof, "
+     "wide front fenders and twin structural flying buttresses sweeping toward the tail. "
+     "The four black road wheels are correctly aligned on two axles, each visible "
+     "near-side tire seated deeply inside its own integrated sculptural fender. "
+     "A full-length ground-hugging body with engineered air channels creates an "
+     "extraordinary but physically buildable new automotive silhouette."),
     ("SPACE LIMO",
-     "A radically futuristic six-meter-long, extremely low exotic luxury fastback ground vehicle. "
-     "A long powerful front section, ultra-extended rear deck, sweeping low glass roofline and "
-     "monolithic blade-like body sides create an extraordinary executive GT silhouette. "
-     "Exactly four ordinary road wheels at front and rear axles, deeply enclosed in "
-     "wide sculptural fenders, wide body, long wheelbase and very low height. "
-     "NOT a bubble pod, autonomous bus, minivan, microcar or three-wheeled urban capsule."),
+     "A professional design-studio photograph of a six-meter 2075 executive grand tourer "
+     "with a radical low-slung fastback profile, an impossibly elegant long wheelbase, "
+     "beautifully stretched wheel-to-wheel proportions, blade-shaped aerodynamic sides "
+     "and a continuous low dark glass roof. Both near-side black rubber wheels are "
+     "clearly visible in conventional front and rear wheel arches with a long gap "
+     "between the axles. The concept is a dramatic, enormous roadgoing grand tourer "
+     "with coherent, production-feasible wheel and body engineering."),
 ]
 # Deliberately NOT a catalog of chrome/silver cars at sunset.
 # Keep color and location diversified independently across days and slots.
@@ -82,11 +85,14 @@ VIEWS = [
 ]
 
 CORE_STYLE = (
-    "An unmistakable radical design leap beyond every present-day car. Not an SUV, sedan, "
-    "familiar sports coupe or modern production concept with LED trim. Prioritize startling "
-    "sculptural silhouette over decorative lights. Four true rubber tires on two aligned axles; "
-    "both near-side wheels visible, realistic ground contact and suspension, no hovering. "
-    "One complete car fully framed, sharp physically coherent high-end CGI, natural shadows."
+    "This must be a startling design leap beyond today's road cars. Not an SUV, not a "
+    "normal contemporary coupe. Photograph one complete and clearly recognizable "
+    "full-scale automobile from bumper to bumper, all four tires connected to the "
+    "body on two normal axles. Precisely engineered fender/wheel geometry with natural "
+    "tire-to-ground contact. The subject fills most of the wide composition while "
+    "leaving breathing room around all corners. Photorealistic automotive CGI with "
+    "precise surface materials, plausible glass reflections, detailed rubber tires, "
+    "professionally balanced lighting, clean crisp industrial design and natural shadows."
 )
 CLEAN = (
     "NO manufacturer identity; completely BLANK nose, hood, body and wheel hubs. "
@@ -104,7 +110,7 @@ def portrait_frame(image):
 
 def prompts_for(day, slot, showcase=False):
     # Distinct silhouettes each slot, rotating 3 families. Different dates/slots diversify.
-    rng = random.Random(f"SEIBELGRAM-VARIETY-02:{day}:{slot}")
+    rng = random.Random(f"SEIBELGRAM-VARIETY-03:{day}:{slot}")
     choices = list(THEMES) if showcase else rng.sample(THEMES, 2)
     # Deterministically rotate ALL 12 color/scene combinations before repeating.
     # Slots alternate between distant palette/setting indices, never same batch duplicates.
@@ -134,7 +140,7 @@ def run(day, slot, demo=False, showcase=False):
     themes, prompts = prompts_for(day, slot, showcase=showcase)
     OUT.mkdir(parents=True, exist_ok=True)
     manifest = {
-        "day": day, "slot": slot, "creative_version": "FUTURE-VARIETY-02",
+        "day": day, "slot": slot, "creative_version": "FUTURE-VARIETY-03",
         "showcase": showcase, "image_model": "@cf/black-forest-labs/flux-2-klein-9b",
         "demo": demo, "images": [], "generation_errors": [],
         "requires_visual_review": True,
