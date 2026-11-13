@@ -138,6 +138,36 @@ class SafeAutoPublishTests(unittest.TestCase):
                               / "buffer-receipt.json").read_text())
         self.assertEqual(receipt["status"], "UNCONFIRMED")
 
+    def test_evening_slot_skips_if_morning_already_reserved(self):
+        with patch.object(ap, "build_reel", side_effect=self.fake_encode):
+            first = ap.prepare(self.DAY, 1)
+            result = ap.prepare(self.DAY, 2)
+        self.assertEqual(first["state"], "ready")
+        self.assertEqual(result["reason"], "daily_post_already_reserved")
+        self.assertFalse(ap.directory(self.DAY, 2).exists())
+        with patch.dict(os.environ, {"SEIBELGRAM_ENABLE_POSTING": "yes"}):
+            with self.assertRaisesRegex(RuntimeError, "Daily TikTok post already reserved"):
+                ap.post(self.DAY, 2)
+
+    def test_evening_fallback_when_morning_failed_qa(self):
+        self.report["items"][0]["approved_for_publication"] = False
+        self.report["items"][0]["vision"]["passed"] = False
+        self.report["items"][0]["vision"]["reasons"] = ["geometry_error_cannot_rule_out"]
+        self.write_report()
+        self.assertEqual(ap.prepare(self.DAY, 1)["state"], "skipped")
+        self.assertFalse(ap.directory(self.DAY, 1).exists())
+        manifest = json.loads((ap.OUTPUT / "post.json").read_text())
+        manifest["slot"] = 2
+        (ap.OUTPUT / "post.json").write_text(json.dumps(manifest))
+        self.report["items"][0]["approved_for_publication"] = True
+        self.report["items"][0]["vision"]["passed"] = True
+        self.report["items"][0]["vision"]["reasons"] = []
+        self.write_report()
+        with patch.object(ap, "build_reel", side_effect=self.fake_encode):
+            fallback = ap.prepare(self.DAY, 2)
+        self.assertEqual(fallback["state"], "ready")
+        self.assertTrue((ap.directory(self.DAY, 2) / "reservation.json").exists())
+
     def test_schedule_is_berlin_local_in_winter_and_summer(self):
         winter = ap.target_time("2026-11-16", 1)
         summer = ap.target_time("2027-07-16", 1)
