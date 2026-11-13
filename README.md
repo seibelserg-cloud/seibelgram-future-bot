@@ -1,8 +1,39 @@
 # SEIBELGRAM | FUTURE CARS
 
+## Current rollout — 13 November 2026
+
+The CI-tested autonomous pipeline now has **two candidate-generation and publication-attempt slots**.
+It must NEVER upload an unapproved design. The target Buffer publication times are
+**12:30 and 19:00 Europe/Berlin**, calculated with the correct summer/winter
+time-zone offset. GitHub generates candidates ahead of those times.
+
+The system generates two FLUX.2 [klein] 9B candidates per slot, runs conservative
+technical and independent Cloudflare Clef visual checks, and selects **no more than
+one genuinely approved** image. When no image passes, the correct outcome is
+**zero posts**, not a forced upload. If one passes, the bot creates a nine-second
+720x1280 H.264/AAC MP4 with an original synthesized soundtrack and no on-screen
+text. The source photo, finished MP4 and unique immutable slot reservation are
+pushed to GitHub **before** a single Buffer API request. All publication attempts
+use TikTok's AI-generated disclosure metadata. On uncertain API responses the
+system does not retry. GitHub receipts distinguish Buffer *acceptance* from
+confirmed TikTok delivery.
+
+**Quality ceiling is unresolved:** a real two-image generation test on
+13 November did not pass editorial QA: one image looked much like a contemporary
+sports coupe and the other did not conclusively meet geometry/quality checks.
+The free image model can continue producing zero eligible posts. Do not weaken QA
+merely to obtain a stated daily posting quantity. No paid tier is enabled.
+
+Status and media: [GitHub Actions](https://github.com/seibelserg-cloud/seibelgram-future-bot/actions),
+artifacts `seibelgram-daily-qa-candidates` and `seibelgram-auto-post-status`.
+The committed `content/YYYY-MM-DD/slot-N/reservation.json` file is the durable
+duplicate guard. Any attempted Buffer request writes `buffer-receipt.json`, including unconfirmed outcomes; only `BUFFER_ACCEPTED` confirms Buffer accepted a scheduled request.
+All previous single-shot public test locks remain valid.
+
+
 Free-first AI concept channel bot for **@seibelgram** — isolated from APP24K/FLOW24K.
 
-**Current state (2026-11-08):** Code uploaded. GitHub Actions CI passed. Cloudflare Workers AI token verified; two real images and one MP4 already generated successfully. Buffer API authenticated and the TikTok channel @seibelgram verified in read-only mode (2026-11-08). **One public photo test succeeded on 2026-11-08. Scheduled candidate generation plus conservative vision QA are installed twice daily; continuous automatic public posting remains disabled pending QA calibration, anti-duplicate verification and the ongoing Buffer TikTok photo incident.**
+**Historical state (2026-11-08, superseded by the rollout section above):** Code uploaded. GitHub Actions CI passed. Cloudflare Workers AI token verified; two real images and one MP4 already generated successfully. Buffer API authenticated and the TikTok channel @seibelgram verified in read-only mode (2026-11-08). **One public photo test succeeded on 2026-11-08. Scheduled candidate generation plus conservative vision QA are installed twice daily; continuous automatic public posting remains disabled pending QA calibration, anti-duplicate verification and the ongoing Buffer TikTok photo incident.**
 
 - Generate two futuristic car concepts (A/B format, differentiated in the post description only).
 - Render clean vertical 720×1280 MP4 with the original synthetic soundtrack using FFmpeg: **no titles, overlaid text, captions, logos, labels or watermark**.

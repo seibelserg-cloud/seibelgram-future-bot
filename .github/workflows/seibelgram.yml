@@ -3,6 +3,8 @@ name: SEIBELGRAM — safe generator
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       demo:
@@ -26,8 +28,8 @@ on:
         required: true
         default: false
   schedule:
-    - cron: '7 11 * * *'
-    - cron: '7 18 * * *'
+    - cron: '7 8 * * *'
+    - cron: '7 15 * * *'
 
 permissions:
   contents: read
@@ -63,7 +65,7 @@ jobs:
         run: |
           set -eu
           SLOT=1
-          if [ "$CRON_EXPRESSION" = '7 18 * * *' ]; then SLOT=2; fi
+          if [ "$CRON_EXPRESSION" = '7 15 * * *' ]; then SLOT=2; fi
           if [ "$MANUAL_DEMO" = "true" ]; then
             python bot.py --demo --slot "$SLOT"
           else
@@ -301,7 +303,7 @@ jobs:
 
   daily_healthcheck:
     # Server-side maintenance only. The real posting workflow is still locked.
-    if: github.event_name == 'schedule' && github.event.schedule == '7 11 * * *'
+    if: github.event_name == 'schedule' && github.event.schedule == '7 8 * * *'
     runs-on: ubuntu-latest
     timeout-minutes: 6
     permissions:
@@ -327,7 +329,7 @@ jobs:
       - name: Explain safety state
         run: |
           echo "SEIBELGRAM healthcheck completed. NO post created."
-          echo "Unattended publishing remains disabled pending Buffer incident closure, deduplication and visual QA."
+          echo "Healthcheck is read-only. Scheduled publishing is separately guarded by online visual QA, immutable slot locks and one Buffer call."
 
   qa_smoke_once:
     # Explicit check against two known generated photos; never writes to Buffer.
@@ -364,13 +366,40 @@ jobs:
           path: qa-smoke-report.json
           retention-days: 7
 
-  daily_candidate_qa:
-    # Two daily photo batches, guarded by strict QA. This NEVER publishes anything.
-    if: github.event_name == 'schedule'
+  qa_pipeline_tests:
+    # PR checks and push tests are offline. No secret, media hosting, or Buffer mutation.
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 8
     permissions:
       contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Safety and auto-publishing regression tests (offline)
+        run: python -m unittest -v test_auto_publish test_bot test_photos test_quality_gate test_image_models
+
+      - name: Encode real 9-second test MP4 with original sound, no social API call
+        run: |
+          set -eu
+          if ! command -v ffmpeg >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y ffmpeg; fi
+          test -s content/2026-11-09-magenta/photo.jpg
+          python reel_from_photo.py --image content/2026-11-09-magenta/photo.jpg --output /tmp/auto-publish-smoke.mp4 --style neon-pulse
+          test "$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=nk=1:nw=1 /tmp/auto-publish-smoke.mp4)" = "h264"
+          test "$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=nk=1:nw=1 /tmp/auto-publish-smoke.mp4)" = "aac"
+          test "$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of default=nk=1:nw=1 /tmp/auto-publish-smoke.mp4)" = "720"
+
+  daily_candidate_qa:
+    # Two daily attempts: publish only if independently passed strict online image QA.
+    # Media and immutable per-slot reservation must be pushed before contacting Buffer.
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -390,7 +419,7 @@ jobs:
         run: |
           set -eu
           SLOT=1
-          if [ "$CRON_EXPRESSION" = '7 18 * * *' ]; then SLOT=2; fi
+          if [ "$CRON_EXPRESSION" = '7 15 * * *' ]; then SLOT=2; fi
           python photo_bot.py --slot "$SLOT"
       - name: Run real visual QA, check branding, originality and duplicate images
         env:
@@ -403,6 +432,63 @@ jobs:
         with:
           name: seibelgram-daily-qa-candidates
           path: photo_output/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Prepare ONE original-sound 9:16 MP4 only when online QA approves
+        run: |
+          set -eu
+          DAY="$(date -u +%F)"
+          SLOT=1
+          if [ "${{ github.event.schedule }}" = "7 15 * * *" ]; then SLOT=2; fi
+          if ! command -v ffmpeg >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y ffmpeg; fi
+          python auto_publish.py prepare --day "$DAY" --slot "$SLOT"
+      - name: Persist MP4 and immutable slot reservation BEFORE any Buffer request
+        run: |
+          set -eu
+          if [ ! -f photo_output/auto-ready.json ]; then echo "Strict QA rejected candidates; skip safely"; exit 0; fi
+          DAY="$(date -u +%F)"
+          SLOT=1
+          if [ "${{ github.event.schedule }}" = "7 15 * * *" ]; then SLOT=2; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "content/$DAY/slot-$SLOT"
+          git diff --cached --quiet && { echo "Reservation not staged"; exit 1; }
+          git commit -m "Reserve SEIBELGRAM $DAY slot $SLOT before Buffer"
+          git push origin HEAD:main
+      - name: Queue once in Buffer for Berlin local 12:30 or 19:00 (NO RETRY)
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          SEIBELGRAM_ENABLE_POSTING: "yes"
+        run: |
+          set -eu
+          if [ ! -f photo_output/auto-ready.json ]; then echo "No video passed visual QA"; exit 0; fi
+          DAY="$(date -u +%F)"
+          SLOT=1
+          if [ "${{ github.event.schedule }}" = "7 15 * * *" ]; then SLOT=2; fi
+          python auto_publish.py post --day "$DAY" --slot "$SLOT"
+      - name: Persist Buffer receipt when present (even if outcome unknown)
+        if: always()
+        run: |
+          set -eu
+          DAY="$(date -u +%F)"
+          SLOT=1
+          if [ "${{ github.event.schedule }}" = "7 15 * * *" ]; then SLOT=2; fi
+          FILE="content/$DAY/slot-$SLOT/buffer-receipt.json"
+          if [ ! -f "$FILE" ]; then echo "No Buffer attempt made"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$FILE"
+          git commit -m "Record SEIBELGRAM $DAY slot $SLOT Buffer attempt"
+          git push origin HEAD:main
+      - name: Archive post status and receipt for audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seibelgram-auto-post-status
+          path: |
+            photo_output/auto-status.json
+            content/*/slot-*/reservation.json
+            content/*/slot-*/buffer-receipt.json
           if-no-files-found: ignore
           retention-days: 7
 
