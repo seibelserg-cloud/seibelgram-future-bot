@@ -120,6 +120,12 @@ def accepted_candidates(day, slot):
 
 def prepare(day, slot):
     folder = directory(day, slot)
+    # The morning and evening jobs are fallback attempts, NOT two daily posts.
+    # Once the earlier slot is reserved, we never create another post that day:
+    # even an unknown Buffer response might already have queued the first video.
+    if slot == 2 and (directory(day, 1) / "reservation.json").exists():
+        return save_status("skipped", "daily_post_already_reserved",
+                           earlier_slot=str(directory(day, 1)))
     if folder.exists():
         # Previously reserved even if Buffer outcome was unknown. No retries.
         return save_status("skipped", "slot_already_reserved", folder=str(folder))
@@ -190,6 +196,10 @@ def ensure_public_video(url):
 def post(day, slot):
     if os.getenv("SEIBELGRAM_ENABLE_POSTING") != "yes":
         raise RuntimeError("Live publishing flag absent")
+    # Defence in depth: an evening publish invocation may not override the
+    # first reservation even if it bypasses the earlier prepare() path.
+    if slot == 2 and (directory(day, 1) / "reservation.json").exists():
+        raise RuntimeError("Daily TikTok post already reserved in morning slot")
     folder = directory(day, slot)
     claim_file = folder / "reservation.json"
     receipt = folder / "buffer-receipt.json"
