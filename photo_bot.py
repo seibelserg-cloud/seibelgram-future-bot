@@ -73,9 +73,8 @@ LOCATIONS = [
     "purple-gray high-altitude gravel road in a dry mountain plateau, midday sun and crisp distant peaks",
 ]
 NO_OLD_LOOK = (
-    "Absolutely NO sunset or sunrise, golden-hour lighting, wet reflective floor, marble-and-glass "
-    "pavilion, curved luxury villa, mountain resort, glossy metallic silver, champagne gold, "
-    "neon cyberpunk streets or repetitive architectural showroom. Different lighting and place."
+    "NO sunset or sunrise, mirrored floors, luxury pavilions, curved villas, "
+    "chrome or metallic gold/silver paint, wet neon streets or resort backdrops."
 )
 VIEWS = [
     ("front_three_quarter", "low FRONT three-quarter camera, one complete side and entire nose visible"),
@@ -85,19 +84,16 @@ VIEWS = [
 ]
 
 CORE_STYLE = (
-    "This must be a startling design leap beyond today's road cars. Not an SUV, not a "
-    "normal contemporary coupe. Photograph one complete and clearly recognizable "
-    "full-scale automobile from bumper to bumper, all four tires connected to the "
-    "body on two normal axles. Precisely engineered fender/wheel geometry with natural "
-    "tire-to-ground contact. The subject fills most of the wide composition while "
-    "leaving breathing room around all corners. Photorealistic automotive CGI with "
-    "precise surface materials, plausible glass reflections, detailed rubber tires, "
-    "professionally balanced lighting, clean crisp industrial design and natural shadows."
+    "A radical design leap beyond current vehicles, not an SUV or ordinary coupe. "
+    "One complete full-size car framed bumper to bumper. Exactly four grounded "
+    "rubber wheels on two correctly aligned axles, visibly seated in wheel arches. "
+    "Crisp photoreal high-end automotive CGI, coherent sculpted body, clean "
+    "reflections, technical details, professional lighting and natural shadows."
 )
 CLEAN = (
-    "NO manufacturer identity; completely BLANK nose, hood, body and wheel hubs. "
-    "Absolutely no badges, fake emblems, branding, crests, insignia, stickers, letters, numbers, "
-    "license plates, inscriptions, text, title, signs, watermark, people, split screen or collage."
+    "NO manufacturer identity, blank nose and wheel hubs; no badges, logos, "
+    "marks, emblems, signs, letters, numbers, text, plates, watermark, "
+    "people, split screen or collage."
 )
 
 def portrait_frame(image):
