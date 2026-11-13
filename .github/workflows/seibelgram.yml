@@ -329,7 +329,7 @@ jobs:
       - name: Explain safety state
         run: |
           echo "SEIBELGRAM healthcheck completed. NO post created."
-          echo "Unattended publishing remains disabled pending Buffer incident closure, deduplication and visual QA."
+          echo "Healthcheck is read-only. Scheduled publishing is separately guarded by online visual QA, immutable slot locks and one Buffer call."
 
   qa_smoke_once:
     # Explicit check against two known generated photos; never writes to Buffer.
