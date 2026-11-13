@@ -392,39 +392,6 @@ jobs:
           test "$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=nk=1:nw=1 /tmp/auto-publish-smoke.mp4)" = "aac"
           test "$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of default=nk=1:nw=1 /tmp/auto-publish-smoke.mp4)" = "720"
 
-  pr_creative_smoke:
-    # One temporary real free-account quality experiment on this same-repo PR only.
-    # NEVER publishes; remove after visual QA calibration.
-    if: github.event_name == 'pull_request' && github.head_ref == 'feat/safe-auto-tiktok-20261113' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: python -m pip install -r requirements.txt
-      - name: Generate two candidates with narrative automotive prompt, zero publications
-        env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-        run: python photo_bot.py --day 2026-11-13 --slot 1
-      - name: Evaluate real images with independent Cloudflare vision QA
-        env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-        run: python quality_gate.py photo_output/car-1.jpg photo_output/car-2.jpg --online --output photo_output/qa-report.json
-      - name: Archive actual images and QA assessment for review
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: seibelgram-narrative-prompt-smoke
-          path: photo_output/
-          if-no-files-found: ignore
-          retention-days: 7
-
   daily_candidate_qa:
     # Two daily attempts: publish only if independently passed strict online image QA.
     # Media and immutable per-slot reservation must be pushed before contacting Buffer.
