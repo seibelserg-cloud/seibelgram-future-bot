@@ -10,6 +10,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import time
@@ -129,6 +130,9 @@ def prepare(day, slot):
         return save_status("skipped", "no_candidate_passed_strict_online_qa")
     image, source, portrait = eligible[0]  # At most one video per slot
     folder.mkdir(parents=True, exist_ok=False)
+    # Keep the approved *source* photo in git for future perceptual duplicate checks.
+    # Archiving only the MP4 would silently disable the existing JPEG archive QA.
+    shutil.copyfile(source, folder / "approved-source.jpg")
     media = folder / "future-reel.mp4"
     style = STYLES[(dt.date.fromisoformat(day).toordinal() + slot) % len(STYLES)]
     build_reel(portrait, media, style)
@@ -144,6 +148,7 @@ def prepare(day, slot):
         "automatic_retries": False,
         "source_photo": source.name,
         "source_image_sha256": sha256(source),
+        "archived_source": "approved-source.jpg",
         "video_sha256": sha256(media),
         "video": media.name,
         "caption": caption,
