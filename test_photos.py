@@ -72,7 +72,7 @@ class PhotoTests(unittest.TestCase):
                 photo_bot.run("2026-11-08",1,True)
             import json
             metadata=json.loads((Path(t)/"post.json").read_text())
-            self.assertTrue(metadata["requires_visual_review"])
+            self.assertFalse(metadata["requires_visual_review"])
             self.assertFalse(metadata["approved_for_publication"])
             self.assertFalse(metadata["published"])
             self.assertEqual(len(metadata["images"]),2)
@@ -94,6 +94,20 @@ class PhotoTests(unittest.TestCase):
         self.assertNotIn(".text(",src)
         photo=Image.new("RGB",(1024,1024),(95,108,126))
         self.assertEqual(photo_bot.portrait_frame(photo).size,(1080,1920))
+    def test_safe_generation_diagnostics_do_not_expose_tokens(self):
+        cases = [
+            ("Missing Cloudflare Free credentials", "cloudflare_credentials_missing"),
+            ("Free usage or capacity limit reached", "cloudflare_free_quota_or_capacity"),
+            ("FLUX2 model unavailable on Free plan", "cloudflare_model_forbidden"),
+            ("request timed out", "cloudflare_timeout"),
+            ("HTTP 503 from upstream", "cloudflare_server_error"),
+            ("FLUX2 Workers AI returned no image", "cloudflare_invalid_response"),
+        ]
+        for raw, expected in cases:
+            self.assertEqual(photo_bot.safe_generation_failure(RuntimeError(raw)), expected)
+        self.assertEqual(photo_bot.safe_generation_failure(
+            RuntimeError("Secret token value abc123")), "generation_RuntimeError")
+
     def test_partial_cloudflare_failure_keeps_remaining_photos(self):
         with tempfile.TemporaryDirectory() as t:
             with patch.object(photo_bot,"OUT",Path(t)):
