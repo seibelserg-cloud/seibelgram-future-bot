@@ -409,6 +409,7 @@ jobs:
           set -eu
           python - <<'PY'
           import datetime as dt
+          import os
           from pathlib import Path
           from zoneinfo import ZoneInfo
           from datetime import timedelta
@@ -434,7 +435,7 @@ jobs:
           if not candidates:
               raise SystemExit("No free future TikTok slot found in the next 8 days")
           due, day, slot = candidates[0]
-          with open("$GITHUB_OUTPUT", "a") as out:
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
               out.write(f"target_day={day.isoformat()}\n")
               out.write(f"target_slot={slot}\n")
               out.write("should_generate=yes\n")
