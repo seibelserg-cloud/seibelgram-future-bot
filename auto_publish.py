@@ -137,9 +137,6 @@ def prepare(day, slot):
         # Previously reserved even if Buffer outcome was unknown. No retries.
         return save_status("skipped", "slot_already_reserved", folder=str(folder))
     due_at = target_time(day, slot)
-    now = dt.datetime.now(dt.timezone.utc)
-    if now >= due_at - dt.timedelta(minutes=15):
-        return save_status("skipped", "too_late_to_schedule_safely")
     eligible = accepted_candidates(day, slot)
     if not eligible:
         return save_status("skipped", "no_valid_nonduplicate_image_generated")
@@ -229,9 +226,6 @@ def post(day, slot):
     subprocess.run(["git", "cat-file", "-e", "HEAD:" + mp4.as_posix()],
                    check=True, capture_output=True)
     due = target_time(day, slot)
-    if dt.datetime.now(dt.timezone.utc) >= due - dt.timedelta(minutes=10):
-        save_status("skipped", "missed_scheduled_slot", folder=str(folder))
-        return
     public_url = HOST + mp4.as_posix()
     ensure_public_video(public_url)
     token = os.getenv("BUFFER_API_KEY", "").strip()
