@@ -393,27 +393,53 @@ jobs:
           test "$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of default=nk=1:nw=1 /tmp/auto-publish-smoke.mp4)" = "720"
 
   daily_candidate_qa:
-    # Two daily generation attempts; first valid image proceeds without AI visual QA.
-    # Media and immutable per-slot reservation must be pushed before contacting Buffer.
+    # Delay-resilient: select the next safe Berlin slot at runtime, not from the cron label.
+    # The immutable reservation is committed before the single Buffer mutation.
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 25
     permissions:
       contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Check one-post daily cap before using Cloudflare Free quota
-        id: daily_cap
+      - name: Select next unreserved Berlin slot with a 30-minute lead
+        id: plan
         run: |
           set -eu
-          DAY="$(date -u +%F)"
-          if [ "${{ github.event.schedule }}" = "7 15 * * *" ] && [ -f "content/$DAY/slot-1/reservation.json" ]; then
-            echo "should_generate=no" >> "$GITHUB_OUTPUT"
-            echo "Morning video already reserved; skip Cloudflare generation and Buffer"
-          else
-            echo "should_generate=yes" >> "$GITHUB_OUTPUT"
-          fi
+          python - <<'PY'
+          import datetime as dt
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+          from datetime import timedelta
+          now = dt.datetime.now(ZoneInfo("Europe/Berlin"))
+          today = now.date()
+          candidates = []
+          for offset in range(0, 8):
+              day = today + timedelta(days=offset)
+              slots = (1, 2) if offset == 0 else (1, 2)
+              for slot in slots:
+                  hour, minute = (12, 30) if slot == 1 else (19, 0)
+                  due = dt.datetime.combine(day, dt.time(hour, minute), tzinfo=ZoneInfo("Europe/Berlin"))
+                  if due <= now + timedelta(minutes=30):
+                      continue
+                  folder = Path("content") / day.isoformat()
+                  # One post maximum for the entire Berlin calendar date.
+                  if any((folder / f"slot-{s}" / "reservation.json").exists() for s in (1, 2)):
+                      break
+                  candidates.append((due, day, slot))
+                  break
+              if candidates:
+                  break
+          if not candidates:
+              raise SystemExit("No free future TikTok slot found in the next 8 days")
+          due, day, slot = candidates[0]
+          with open("$GITHUB_OUTPUT", "a") as out:
+              out.write(f"target_day={day.isoformat()}\n")
+              out.write(f"target_slot={slot}\n")
+              out.write("should_generate=yes\n")
+          print(f"Selected {day.isoformat()} slot {slot}, due {due.isoformat()}")
+          PY
       - name: Python
         uses: actions/setup-python@v5
         with:
@@ -423,16 +449,11 @@ jobs:
       - name: Run generator and media-integrity tests
         run: python -m unittest -v test_photos test_image_models test_auto_publish
       - name: Generate separate image candidates
-        if: steps.daily_cap.outputs.should_generate == 'yes'
+        if: steps.plan.outputs.should_generate == 'yes'
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CRON_EXPRESSION: ${{ github.event.schedule }}
-        run: |
-          set -eu
-          SLOT=1
-          if [ "$CRON_EXPRESSION" = '7 15 * * *' ]; then SLOT=2; fi
-          python photo_bot.py --slot "$SLOT"
+        run: python photo_bot.py --day "${{ steps.plan.outputs.target_day }}" --slot "${{ steps.plan.outputs.target_slot }}"
       - name: Archive generated image candidates and manifest
         if: always()
         uses: actions/upload-artifact@v4
@@ -441,46 +462,38 @@ jobs:
           path: photo_output/
           if-no-files-found: ignore
           retention-days: 7
-      - name: Prepare ONE original-sound 9:16 MP4 from valid generated image
-        if: steps.daily_cap.outputs.should_generate == 'yes'
+      - name: Prepare ONE original-sound 9:16 MP4 from first technically valid JPEG
+        if: steps.plan.outputs.should_generate == 'yes'
         run: |
           set -eu
-          DAY="$(date -u +%F)"
-          SLOT=1
-          if [ "${{ github.event.schedule }}" = "7 15 * * *" ]; then SLOT=2; fi
           if ! command -v ffmpeg >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y ffmpeg; fi
-          python auto_publish.py prepare --day "$DAY" --slot "$SLOT"
+          python auto_publish.py prepare --day "${{ steps.plan.outputs.target_day }}" --slot "${{ steps.plan.outputs.target_slot }}"
       - name: Persist MP4 and immutable slot reservation BEFORE any Buffer request
         run: |
           set -eu
           if [ ! -f photo_output/auto-ready.json ]; then echo "No valid generated image; skip safely"; exit 0; fi
-          DAY="$(date -u +%F)"
-          SLOT=1
-          if [ "${{ github.event.schedule }}" = "7 15 * * *" ]; then SLOT=2; fi
+          DAY="${{ steps.plan.outputs.target_day }}"
+          SLOT="${{ steps.plan.outputs.target_slot }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "content/$DAY/slot-$SLOT"
           git diff --cached --quiet && { echo "Reservation not staged"; exit 1; }
           git commit -m "Reserve SEIBELGRAM $DAY slot $SLOT before Buffer"
           git push origin HEAD:main
-      - name: Queue once in Buffer for Berlin local 12:30 or 19:00 (NO RETRY)
+      - name: Queue once in Buffer for selected future Berlin slot (NO RETRY)
         env:
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
           SEIBELGRAM_ENABLE_POSTING: "yes"
         run: |
           set -eu
           if [ ! -f photo_output/auto-ready.json ]; then echo "No video prepared"; exit 0; fi
-          DAY="$(date -u +%F)"
-          SLOT=1
-          if [ "${{ github.event.schedule }}" = "7 15 * * *" ]; then SLOT=2; fi
-          python auto_publish.py post --day "$DAY" --slot "$SLOT"
+          python auto_publish.py post --day "${{ steps.plan.outputs.target_day }}" --slot "${{ steps.plan.outputs.target_slot }}"
       - name: Persist Buffer receipt when present (even if outcome unknown)
         if: always()
         run: |
           set -eu
-          DAY="$(date -u +%F)"
-          SLOT=1
-          if [ "${{ github.event.schedule }}" = "7 15 * * *" ]; then SLOT=2; fi
+          DAY="${{ steps.plan.outputs.target_day }}"
+          SLOT="${{ steps.plan.outputs.target_slot }}"
           FILE="content/$DAY/slot-$SLOT/buffer-receipt.json"
           if [ ! -f "$FILE" ]; then echo "No Buffer attempt made"; exit 0; fi
           git config user.name "github-actions[bot]"
