@@ -1,0 +1,18 @@
+{
+  "unique_slot": "2026-11-19-slot-1",
+  "date": "2026-11-19",
+  "slot": 1,
+  "channel": "tiktok/@seibelgram",
+  "state": "RESERVED_BEFORE_BUFFER_ATTEMPT",
+  "automatic_retries": false,
+  "source_photo": "car-1.jpg",
+  "source_image_sha256": "0579fdc824abafd1032c9d1284932b6b318b0a8f2800a6dcd99c55f5c156b986",
+  "archived_source": "approved-source.jpg",
+  "video_sha256": "37cb03c1aaf61b28990e6ff1c8a8e29fe8ed8039d9e0b98cf12948b855795883",
+  "video": "future-reel.mp4",
+  "caption": "Future / Impossible: AERO BEAST. Would you drive it? ⚡ AI-generated concept car. #FutureCars #AIConcept #Seibelgram",
+  "scheduled_for_utc": "2026-11-19T11:30:00+00:00",
+  "ai_generated": true,
+  "original_synth_audio": true,
+  "visual_qa_required": false
+}
