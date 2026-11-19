@@ -400,7 +400,7 @@ jobs:
   daily_candidate_qa:
     # Delay-resilient: select the next safe Berlin slot at runtime, not from the cron label.
     # The immutable reservation is committed before the single Buffer mutation.
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.publish_daily == true)
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.publish_daily == true) || (github.event_name == 'push' && github.event.head_commit.message == 'SEIBELGRAM one-time safe recovery 2026-11-19')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
