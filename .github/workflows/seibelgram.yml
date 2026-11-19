@@ -22,6 +22,11 @@ on:
         type: boolean
         required: true
         default: false
+      publish_daily:
+        description: 'Explicitly run the protected daily TikTok publishing pipeline (one reservation per day)'
+        type: boolean
+        required: true
+        default: false
       check_cloudflare:
         description: 'Check Cloudflare token and generate one test image; never publishes'
         type: boolean
@@ -395,7 +400,7 @@ jobs:
   daily_candidate_qa:
     # Delay-resilient: select the next safe Berlin slot at runtime, not from the cron label.
     # The immutable reservation is committed before the single Buffer mutation.
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.publish_daily == true)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
