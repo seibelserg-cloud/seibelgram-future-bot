@@ -1,0 +1,18 @@
+{
+  "unique_slot": "2026-11-25-slot-1",
+  "date": "2026-11-25",
+  "slot": 1,
+  "channel": "tiktok/@seibelgram",
+  "state": "RESERVED_BEFORE_BUFFER_ATTEMPT",
+  "automatic_retries": false,
+  "source_photo": "car-1.jpg",
+  "source_image_sha256": "6cffb1a7d3597a3da9996ff5d6a68c46db3ed9af042a6c6e83d969b069b8ea20",
+  "archived_source": "approved-source.jpg",
+  "video_sha256": "f1daa1bb18569c3c6027b09b4152514b8f5bfa1563f41327ab1bf93e9f6cfe64",
+  "video": "future-reel.mp4",
+  "caption": "Future / Impossible: MONOLITH. Would you drive it? ⚡ AI-generated concept car. #FutureCars #AIConcept #Seibelgram",
+  "scheduled_for_utc": "2026-11-25T11:30:00+00:00",
+  "ai_generated": true,
+  "original_synth_audio": true,
+  "visual_qa_required": false
+}
