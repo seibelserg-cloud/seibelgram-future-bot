@@ -85,8 +85,8 @@ VIEWS = [
 
 CORE_STYLE = (
     "A radical design leap beyond current vehicles, not an SUV or ordinary coupe. "
-    "One complete full-size car framed bumper to bumper. Exactly four grounded "
-    "rubber wheels on two correctly aligned axles, visibly seated in wheel arches. "
+    "One complete full-size car framed bumper to bumper. Conventional four-wheel layout only: exactly TWO wheels on the visible side, one at the FRONT axle and one at the REAR axle, never three. No duplicated, mirrored, overlapping, floating or extra wheels. Exactly four grounded "
+    "rubber wheels on two correctly aligned axles, visibly seated in separate wheel arches. "
     "Crisp photoreal high-end automotive CGI, coherent sculpted body, clean "
     "reflections, technical details, professional lighting and natural shadows."
 )
