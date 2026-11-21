@@ -2,7 +2,7 @@
 """SEIBELGRAM: make a 9-second vertical short with ORIGINAL synthesized music.
 
 No samples, copyrighted tracks, TikTok audio-library access, paid APIs or posting.
-Source JPG remains visually intact except for subtle cinematic parallax movement.
+Source JPG remains visually intact with a fully static camera and no pan/zoom.
 """
 import argparse
 import json
@@ -73,10 +73,9 @@ def build(image,output,style="neon-pulse"):
     dst.parent.mkdir(parents=True,exist_ok=True)
     audio=dst.with_suffix(".original-audio.wav")
     original_soundtrack(audio,style)
-    # Slightly overscale 9:16 artwork and pan a few pixels across 9s.
-    # No titles, captions, logos, overlays, samples or music platform dependencies.
-    vf=("scale=768:1366:flags=lanczos,"
-        "crop=720:1280:x='24+10*sin(n/40)':y='43+17*cos(n/55)',"
+    # Locked camera: no oscillating crop, sudden pan, or zoom.
+    # Exact 9:16 scaling retains all source geometry.
+    vf=("scale=720:1280:flags=lanczos,"
         "fps=24,format=yuv420p,fade=t=in:st=0:d=0.25,"
         "fade=t=out:st=8.65:d=0.35")
     cmd=["ffmpeg","-hide_banner","-loglevel","error","-y",
