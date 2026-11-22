@@ -1,0 +1,8 @@
+{
+  "slot": "2026-11-27-slot-1",
+  "video_sha256": "16fc2ad6beef4a0097ae54dd1fa33e154bc5863155e7da17a65fb1c4aa26c714",
+  "status": "BUFFER_ACCEPTED",
+  "no_automatic_retry": true,
+  "buffer_post_id": "6b0357edd864a01105f57b46",
+  "buffer_status": "scheduled"
+}
