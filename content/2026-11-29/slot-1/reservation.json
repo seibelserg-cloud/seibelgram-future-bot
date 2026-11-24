@@ -1,0 +1,18 @@
+{
+  "unique_slot": "2026-11-29-slot-1",
+  "date": "2026-11-29",
+  "slot": 1,
+  "channel": "tiktok/@seibelgram",
+  "state": "RESERVED_BEFORE_BUFFER_ATTEMPT",
+  "automatic_retries": false,
+  "source_photo": "car-1.jpg",
+  "source_image_sha256": "c78bf0b3bfa7830398c29eb0bd97637b2517762bf56f5d9757c7b4efe80efbbc",
+  "archived_source": "approved-source.jpg",
+  "video_sha256": "7b3009be5a9a76dd78237da1d4e048d38bb76dac398fa423bca8054f4bc4f7c5",
+  "video": "future-reel.mp4",
+  "caption": "Future / Impossible: SPACE LIMO. Would you drive it? ⚡ AI-generated concept car. #FutureCars #AIConcept #Seibelgram",
+  "scheduled_for_utc": "2026-11-29T11:30:00+00:00",
+  "ai_generated": true,
+  "original_synth_audio": true,
+  "visual_qa_required": false
+}
